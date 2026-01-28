@@ -10,7 +10,7 @@
 
 [build.environment]
   # Versión de Node.js
-  NODE_VERSION = "18"
+  NODE_VERSION = "20"
   
   # Deshabilitar escaneo de secretos para variables públicas de Supabase
   SECRETS_SCAN_ENABLED = "false"
