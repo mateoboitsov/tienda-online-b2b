@@ -1,0 +1,23 @@
+name: Keep-Alive
+
+on:
+  schedule:
+    - cron: '0 0 * * *'  # Cada 24 horas (medianoche UTC)
+  workflow_dispatch:  # Permite ejecución manual
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Keep-Alive - Web App
+        run: |
+          curl -f ${{ secrets.APP_URL || 'https://versaltechb2b.com' }} || exit 0
+      
+      - name: Keep-Alive - Supabase
+        run: |
+          SUPABASE_URL="${{ secrets.SUPABASE_URL }}"
+          SUPABASE_KEY="${{ secrets.SUPABASE_ANON_KEY }}"
+          if [ -n "$SUPABASE_URL" ] && [ -n "$SUPABASE_KEY" ]; then
+            curl -f -H "apikey: $SUPABASE_KEY" -H "Authorization: Bearer $SUPABASE_KEY" \
+              "$SUPABASE_URL/rest/v1/products?select=id&limit=1" || exit 0
+          fi

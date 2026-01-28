@@ -1,0 +1,455 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+:root {
+  --radius: 0.625rem;
+  --background: #FFFFFF;
+  --foreground: #161614;
+  --card: #FFFFFF;
+  --card-foreground: #161614;
+  --popover: #FFFFFF;
+  --popover-foreground: #161614;
+  --primary: #279989;
+  --primary-foreground: #FFFFFF;
+  --secondary: #6EFCD3;
+  --secondary-foreground: #161614;
+  --muted: #F7F7F7;
+  --muted-foreground: #6B7280;
+  --accent: #F7F7F7;
+  --accent-foreground: #161614;
+  --destructive: #EF4444;
+  --border: #E5E7EB;
+  --input: #E5E7EB;
+  --ring: #279989;
+  --chart-1: #279989;
+  --chart-2: #6EFCD3;
+  --chart-3: #F7F7F7;
+  --chart-4: #161614;
+  --chart-5: #6B7280;
+  --sidebar: #FFFFFF;
+  --sidebar-foreground: #161614;
+  --sidebar-primary: #279989;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #F7F7F7;
+  --sidebar-accent-foreground: #161614;
+  --sidebar-border: #E5E7EB;
+  --sidebar-ring: #279989;
+  /* Variables de fuente */
+  --font-sans: var(--font-poppins);
+  --font-mono: var(--font-poppins);
+}
+
+/* Configuración base de Poppins */
+body {
+  font-family: var(--font-poppins), "Poppins", sans-serif;
+}
+
+/* Clases de utilidad para Poppins */
+.font-poppins {
+  font-family: var(--font-poppins), "Poppins", sans-serif;
+}
+
+.dark {
+  --background: #161614;
+  --foreground: #FFFFFF;
+  --card: #1F1F1F;
+  --card-foreground: #FFFFFF;
+  --popover: #1F1F1F;
+  --popover-foreground: #FFFFFF;
+  --primary: #6EFCD3;
+  --primary-foreground: #161614;
+  --secondary: #279989;
+  --secondary-foreground: #FFFFFF;
+  --muted: #2A2A2A;
+  --muted-foreground: #9CA3AF;
+  --accent: #2A2A2A;
+  --accent-foreground: #FFFFFF;
+  --destructive: #F87171;
+  --border: #374151;
+  --input: #374151;
+  --ring: #6EFCD3;
+  --chart-1: #6EFCD3;
+  --chart-2: #279989;
+  --chart-3: #F7F7F7;
+  --chart-4: #FFFFFF;
+  --chart-5: #9CA3AF;
+  --sidebar: #1F1F1F;
+  --sidebar-foreground: #FFFFFF;
+  --sidebar-primary: #6EFCD3;
+  --sidebar-primary-foreground: #161614;
+  --sidebar-accent: #2A2A2A;
+  --sidebar-accent-foreground: #FFFFFF;
+  --sidebar-border: #374151;
+  --sidebar-ring: #6EFCD3;
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 70px;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+
+/* Estilos globales para encabezados */
+h1 {
+  font-size: 34px;
+  line-height: 0.9;
+  font-weight: 800;
+  /* extrabold */
+  text-transform: uppercase;
+  letter-spacing: calc(34px / 100 * -6);
+  /* -6% */
+}
+
+h2 {
+  font-size: 28px;
+  line-height: 1;
+  font-weight: 700;
+  /* bold */
+  text-transform: uppercase;
+  letter-spacing: calc(28px / 100 * -6);
+  /* -6% */
+}
+
+/* Media queries para desktop */
+@media (min-width: 768px) {
+  h1 {
+    font-size: 52px;
+    letter-spacing: calc(52px / 100 * -6);
+    /* -6% */
+  }
+
+  h2 {
+    font-size: 38px;
+    letter-spacing: calc(38px / 100 * -6);
+    /* -6% */
+  }
+}
+
+h3 {
+  font-size: 24px;
+  line-height: 1.4;
+  font-weight: 500;
+  /* medium */
+  letter-spacing: calc(24px / 100 * -5);
+  /* -5% */
+}
+
+h4 {
+  font-size: 18px;
+  line-height: 1.5;
+  letter-spacing: calc(18px / 100 * -5);
+  /* -5% */
+}
+
+/* Estilos personalizados para text-base */
+.text-base {
+  letter-spacing: calc(1rem / 100 * -4);
+  /* -4% del font-size base (16px) */
+  line-height: 1.2;
+  font-weight: 500;
+  /* medium */
+}
+
+/* Clase para destacar texto */
+.text-highlight {
+  padding: 0.625rem;
+  /* p-2.5 */
+  transform-origin: top left;
+  transform: rotate(-1deg) translateY(-6px);
+  background-color: #279989;
+  border-radius: 20px;
+  box-shadow: 0px 4px 84px 0px rgba(110, 252, 211, 1.00);
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.625rem;
+  /* gap-2.5 */
+}
+
+.text-highlight-wa {
+  padding: 0.625rem;
+  /* p-2.5 */
+  background-color: #279989;
+  border-radius: 10px;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.text-highlight-content {
+  justify-content: flex-start;
+  color: #6efcd3;
+  font-size: 24px;
+  font-weight: 700;
+  /* bold */
+  font-family: 'Poppins', sans-serif;
+  text-transform: uppercase;
+  line-height: 1;
+}
+
+/* Media query para desktop - text-highlight-content */
+@media (min-width: 768px) {
+  .text-highlight-content {
+    font-size: 52px;
+    line-height: 46.80px;
+  }
+}
+
+/* Estilos personalizados para la marca */
+.bg-brand-white {
+  background-color: #FFFFFF;
+}
+
+.bg-brand-black {
+  background-color: #161614;
+}
+
+.bg-brand-gray {
+  background-color: #F7F7F7;
+}
+
+.bg-brand-green {
+  background-color: #279989;
+}
+
+.bg-brand-neon {
+  background-color: #6EFCD3;
+}
+
+.text-brand-white {
+  color: #FFFFFF;
+}
+
+.text-brand-black {
+  color: #161614;
+}
+
+.text-brand-gray {
+  color: #6B7280;
+}
+
+.text-brand-green {
+  color: #279989;
+}
+
+.text-brand-neon {
+  color: #6EFCD3;
+}
+
+.border-brand-white {
+  border-color: #FFFFFF;
+}
+
+.border-brand-black {
+  border-color: #161614;
+}
+
+.border-brand-gray {
+  border-color: #F7F7F7;
+}
+
+.border-brand-green {
+  border-color: #279989;
+}
+
+.border-brand-neon {
+  border-color: #6EFCD3;
+}
+
+/* Animación del scroll infinito */
+@keyframes scroll {
+  0% {
+    transform: translateX(0);
+  }
+
+  100% {
+    transform: translateX(-896px);
+  }
+}
+
+
+.animate-scroll {
+  animation: scroll 8s linear infinite;
+  width: max-content;
+}
+
+/* Clases de Poppins */
+.poppins-thin {
+  font-family: "Poppins", sans-serif;
+  font-weight: 100;
+  font-style: normal;
+}
+
+.poppins-extralight {
+  font-family: "Poppins", sans-serif;
+  font-weight: 200;
+  font-style: normal;
+}
+
+.poppins-light {
+  font-family: "Poppins", sans-serif;
+  font-weight: 300;
+  font-style: normal;
+}
+
+.poppins-regular {
+  font-family: "Poppins", sans-serif;
+  font-weight: 400;
+  font-style: normal;
+}
+
+.poppins-medium {
+  font-family: "Poppins", sans-serif;
+  font-weight: 500;
+  font-style: normal;
+}
+
+.poppins-semibold {
+  font-family: "Poppins", sans-serif;
+  font-weight: 600;
+  font-style: normal;
+}
+
+.poppins-bold {
+  font-family: "Poppins", sans-serif;
+  font-weight: 700;
+  font-style: normal;
+}
+
+.poppins-extrabold {
+  font-family: "Poppins", sans-serif;
+  font-weight: 800;
+  font-style: normal;
+}
+
+.poppins-black {
+  font-family: "Poppins", sans-serif;
+  font-weight: 900;
+  font-style: normal;
+}
+
+.poppins-thin-italic {
+  font-family: "Poppins", sans-serif;
+  font-weight: 100;
+  font-style: italic;
+}
+
+.poppins-extralight-italic {
+  font-family: "Poppins", sans-serif;
+  font-weight: 200;
+  font-style: italic;
+}
+
+.poppins-light-italic {
+  font-family: "Poppins", sans-serif;
+  font-weight: 300;
+  font-style: italic;
+}
+
+.poppins-regular-italic {
+  font-family: "Poppins", sans-serif;
+  font-weight: 400;
+  font-style: italic;
+}
+
+.poppins-medium-italic {
+  font-family: "Poppins", sans-serif;
+  font-weight: 500;
+  font-style: italic;
+}
+
+.poppins-semibold-italic {
+  font-family: "Poppins", sans-serif;
+  font-weight: 600;
+  font-style: italic;
+}
+
+.poppins-bold-italic {
+  font-family: "Poppins", sans-serif;
+  font-weight: 700;
+  font-style: italic;
+}
+
+.poppins-extrabold-italic {
+  font-family: "Poppins", sans-serif;
+  font-weight: 800;
+  font-style: italic;
+}
+
+.poppins-black-italic {
+  font-family: "Poppins", sans-serif;
+  font-weight: 900;
+  font-style: italic;
+}
+
+/* Estilos para scroll horizontal personalizado */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  /* Internet Explorer 10+ */
+  scrollbar-width: none;
+  /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+  /* Safari and Chrome */
+}
+
+/* Estilos para el cursor de drag */
+.cursor-grab {
+  cursor: grab;
+}
+
+.cursor-grabbing {
+  cursor: grabbing;
+}
