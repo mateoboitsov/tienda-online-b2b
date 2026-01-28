@@ -8,7 +8,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { ProductConfigurator } from "@/components/product/ProductConfigurator";
+import { ProductVariationsList } from "@/components/product/ProductVariationsList";
 import { ProductImageGallery } from "@/components/product/ProductImageGallery";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   ShoppingCart,
   ArrowLeft,
@@ -18,7 +20,8 @@ import {
   HardDrive,
   Palette,
   Plus,
-  Minus
+  Minus,
+  Package
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Product } from "@/lib/types/database";
@@ -36,7 +39,8 @@ export default function ProductoPage() {
     storage: '',
     color: '',
     condition: '',
-    productType: ''
+    productType: '',
+    packaging: ''
   });
   const [selectedAccessories, setSelectedAccessories] = useState({
     screenProtector: false,
@@ -71,7 +75,8 @@ export default function ProductoPage() {
             storage: firstVariation.storage,
             color: firstVariation.color,
             condition: firstVariation.condition,
-            productType: firstVariation.productType
+            productType: firstVariation.productType,
+            packaging: firstVariation.packaging || ''
           });
         }
         loadedProductIdRef.current = productId;
@@ -106,12 +111,13 @@ export default function ProductoPage() {
       v.storage === productConfig.storage &&
       v.color === productConfig.color &&
       v.condition === productConfig.condition &&
-      v.productType === productConfig.productType
+      v.productType === productConfig.productType &&
+      (v.packaging || '') === (productConfig.packaging || '')
     ) || product.variations[0];
   }, [product, productConfig]);
 
   // Funciones simplificadas - usan la variación seleccionada
-  const getSelectedPrice = () => selectedVariation?.price || product?.price || 0;
+  const getSelectedPrice = () => (selectedVariation?.price ? selectedVariation.price + 5 : product?.price ? product.price + 5 : 0);
   const isInStock = () => (selectedVariation?.stock || 0) > 0;
   const getStock = () => selectedVariation?.stock || 0;
 
@@ -131,7 +137,8 @@ export default function ProductoPage() {
       // Calcular precio total con accesorios
       let totalPrice = getSelectedPrice();
       if (selectedAccessories.screenProtector) totalPrice += 3.50;
-      if (!selectedAccessories.caseWithCharger) totalPrice -= 9.90;
+      // La caja está cargada por defecto (+5), si se desmarca la restamos
+      if (!selectedAccessories.caseWithCharger) totalPrice -= 5;
 
       // No modificamos el ID aquí, el carrito se encarga de generar el uniqueId
       // basado en la configuración.
@@ -175,13 +182,36 @@ export default function ProductoPage() {
     }
   };
 
-  const handleConfigChange = useCallback((config: { storage: string; color: string; condition: string; productType: string }) => {
-    setProductConfig(config);
+  const handleConfigChange = useCallback((config: { storage: string; color: string; condition: string; productType: string; packaging: string | null }) => {
+    setProductConfig({
+      storage: config.storage,
+      color: config.color,
+      condition: config.condition,
+      productType: config.productType,
+      packaging: config.packaging || ''
+    });
   }, []);
 
   const handleBackToProducts = () => {
     router.push('/productos');
   };
+
+  // Efecto para manejar la lógica de packaging (Original Box)
+  useEffect(() => {
+    if (selectedVariation?.packaging === 'Original Box') {
+      setSelectedAccessories(prev => ({
+        ...prev,
+        caseWithCharger: true
+      }));
+    } else {
+      // Si no es Original Box, por defecto dejamos que la caja esté incluida 
+      // pero el usuario puede ahora desmarcarla libremente
+      setSelectedAccessories(prev => ({
+        ...prev,
+        caseWithCharger: true
+      }));
+    }
+  }, [selectedVariation?.id, selectedVariation?.packaging]);
 
   if (loading) {
     return (
@@ -215,6 +245,7 @@ export default function ProductoPage() {
       </>
     );
   }
+
 
   return (
     <>
@@ -260,11 +291,42 @@ export default function ProductoPage() {
                 </p>
               </div>
 
-              {/* Configurador de producto */}
-              <ProductConfigurator
-                product={product}
-                onConfigChange={handleConfigChange}
-              />
+              <Tabs defaultValue="list" className="w-full">
+                <div className="flex items-center justify-between mb-4">
+                  <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest">Modo de selección</h4>
+                  <TabsList className="grid grid-cols-2 w-[220px]">
+                    <TabsTrigger value="configurator" className="gap-2 text-xs">
+                      <Palette className="w-3.5 h-3.5" /> Pasos
+                    </TabsTrigger>
+                    <TabsTrigger value="list" className="gap-2 text-xs">
+                      <Package className="w-3.5 h-3.5" /> Lista
+                    </TabsTrigger>
+                  </TabsList>
+                </div>
+
+                <TabsContent value="configurator" className="mt-0 ring-0 focus-visible:ring-0">
+                  <ProductConfigurator
+                    product={product}
+                    onConfigChange={handleConfigChange}
+                  />
+                </TabsContent>
+
+                <TabsContent value="list" className="mt-0 ring-0 focus-visible:ring-0">
+                  <ProductVariationsList
+                    product={product}
+                    selectedVariationId={selectedVariation?.id || ''}
+                    onVariationChange={(variation) => {
+                      setProductConfig({
+                        storage: variation.storage,
+                        color: variation.color,
+                        condition: variation.condition,
+                        productType: variation.productType,
+                        packaging: variation.packaging || ''
+                      });
+                    }}
+                  />
+                </TabsContent>
+              </Tabs>
 
 
 
@@ -316,8 +378,8 @@ export default function ProductoPage() {
                       €{(() => {
                         let totalPrice = getSelectedPrice();
                         if (selectedAccessories.screenProtector) totalPrice += 3.50;
-                        // La caja con cable está incluida por defecto, se resta si se deselecciona
-                        if (!selectedAccessories.caseWithCharger) totalPrice -= 9.90;
+                        // La caja con cable ya está sumada (+5€), si se desmarca restamos esos 5€
+                        if (!selectedAccessories.caseWithCharger) totalPrice -= 5;
                         return totalPrice.toFixed(2);
                       })()}
                     </span>
@@ -333,35 +395,52 @@ export default function ProductoPage() {
                 <div>
                   <h4 className="text-sm font-semibold text-brand-black mb-3">Complementa tu modelo con:</h4>
                   <div className="space-y-3">
-                    <label className="flex items-center gap-3 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={selectedAccessories.screenProtector}
-                        onChange={(e) => setSelectedAccessories(prev => ({
-                          ...prev,
-                          screenProtector: e.target.checked
-                        }))}
-                        className="w-4 h-4 text-black border-gray-300 rounded focus:ring-black"
-                      />
-                      <span className="text-sm text-brand-black">Protector de pantalla Hidrogel +3,50€</span>
-                    </label>
-                    <label className="flex items-center gap-3 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={selectedAccessories.caseWithCharger}
-                        onChange={(e) => setSelectedAccessories(prev => ({
-                          ...prev,
-                          caseWithCharger: e.target.checked
-                        }))}
-                        className="w-4 h-4 text-black border-gray-300 rounded focus:ring-black"
-                      />
-                      <span className="text-sm text-brand-black">
-                        {selectedAccessories.caseWithCharger
-                          ? 'Caja con Cable de carga y Extractor de la tarjeta SIM (Incluido)'
-                          : 'Caja con Cable de carga y Extractor de la tarjeta SIM -9,90€'
-                        }
+                    <label className="flex items-center gap-3 cursor-pointer group">
+                      <div className="relative flex items-center">
+                        <input
+                          type="checkbox"
+                          checked={selectedAccessories.screenProtector}
+                          onChange={(e) => setSelectedAccessories(prev => ({
+                            ...prev,
+                            screenProtector: e.target.checked
+                          }))}
+                          className="w-5 h-5 text-brand-green border-gray-300 rounded focus:ring-brand-green cursor-pointer transition-colors"
+                        />
+                      </div>
+                      <span className="text-sm text-brand-black group-hover:text-brand-green transition-colors">
+                        Protector de pantalla Hidrogel <span className="text-brand-green font-semibold">+3,50€</span>
                       </span>
                     </label>
+
+                    {selectedVariation?.packaging === 'Original Box' ? (
+                      <div className="flex items-center gap-3 p-3 bg-brand-green/5 border border-brand-green/20 rounded-lg">
+                        <CheckCircle className="w-5 h-5 text-brand-green" />
+                        <div className="flex flex-col">
+                          <span className="text-sm font-semibold text-brand-green">Caja Original Apple (Incluida)</span>
+                          <span className="text-xs text-brand-green/70">Esta variación incluye su caja original de fábrica.</span>
+                        </div>
+                      </div>
+                    ) : (
+                      <label className="flex items-center gap-3 cursor-pointer group">
+                        <div className="relative flex items-center">
+                          <input
+                            type="checkbox"
+                            checked={selectedAccessories.caseWithCharger}
+                            onChange={(e) => setSelectedAccessories(prev => ({
+                              ...prev,
+                              caseWithCharger: e.target.checked
+                            }))}
+                            className="w-5 h-5 text-brand-green border-gray-300 rounded focus:ring-brand-green cursor-pointer transition-colors"
+                          />
+                        </div>
+                        <span className="text-sm text-brand-black group-hover:text-brand-green transition-colors font-medium">
+                          {selectedAccessories.caseWithCharger
+                            ? <>Caja con Cable y Extractor SIM <span className="text-brand-green font-bold">(Incluido)</span></>
+                            : <>Caja con Cable y Extractor SIM <span className="text-red-500 font-bold">Sin caja (-5€)</span></>
+                          }
+                        </span>
+                      </label>
+                    )}
                   </div>
                 </div>
 

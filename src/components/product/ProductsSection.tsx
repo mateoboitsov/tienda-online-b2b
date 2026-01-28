@@ -2,12 +2,13 @@
 
 import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { ProductCard } from "./ProductCard";
+import { ProductCardList } from "./ProductCardList";
 import { ProductFilters } from "./ProductFilters";
 import { Product } from "@/lib/types/database";
 import { getProducts } from "@/lib/services/productsService";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/contexts/CartContext";
-import { ShoppingCart, MessageCircle, Smartphone, Truck, Shield, Package, Users, HeadphonesIcon, Banknote } from "lucide-react";
+import { ShoppingCart, MessageCircle, Smartphone, Truck, Shield, Package, Users, HeadphonesIcon, Banknote, LayoutGrid, List } from "lucide-react";
 
 interface ProductsSectionProps {
   onProceedToCheckout: () => void;
@@ -18,6 +19,7 @@ export function ProductsSection({ onProceedToCheckout }: ProductsSectionProps) {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
   const isLoadingRef = useRef(false);
   const hasLoadedRef = useRef(false);
 
@@ -109,12 +111,31 @@ export function ProductsSection({ onProceedToCheckout }: ProductsSectionProps) {
           </div>
         </div>
 
-        {/* Filtros de productos */}
-        <div className="px-6 mb-8">
-          <ProductFilters
-            products={products}
-            onFilteredProductsChange={handleFilteredProductsChange}
-          />
+        {/* Filtros de productos y Controles de vista */}
+        <div className="px-6 mb-8 flex flex-col md:flex-row items-end md:items-center justify-between gap-4">
+          <div className="flex-1 w-full">
+            <ProductFilters
+              products={products}
+              onFilteredProductsChange={handleFilteredProductsChange}
+            />
+          </div>
+
+          <div className="bg-gray-100 p-1 rounded-lg flex items-center gap-1 shrink-0 h-fit">
+            <button
+              onClick={() => setViewMode('grid')}
+              className={`p-1.5 rounded-md transition-all ${viewMode === 'grid' ? 'bg-white shadow-sm text-brand-green' : 'text-gray-400 hover:text-gray-600'}`}
+              title="Vista Cuadrícula"
+            >
+              <LayoutGrid className="w-5 h-5" />
+            </button>
+            <button
+              onClick={() => setViewMode('list')}
+              className={`p-1.5 rounded-md transition-all ${viewMode === 'list' ? 'bg-white shadow-sm text-brand-green' : 'text-gray-400 hover:text-gray-600'}`}
+              title="Vista Lista"
+            >
+              <List className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
         {/* Grid de productos */}
@@ -123,12 +144,18 @@ export function ProductsSection({ onProceedToCheckout }: ProductsSectionProps) {
             <div className="text-center py-12">
               <p className="text-gray-600">Cargando productos...</p>
             </div>
-          ) : (
+          ) : viewMode === 'grid' ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {filteredProducts.map((product: Product) => (
-                <div key={product.id} className="transform transition-all duration-200 hover:scale-105">
+                <div key={product.id} className="transform transition-all duration-200 hover:scale-[1.02]">
                   <ProductCard product={product} />
                 </div>
+              ))}
+            </div>
+          ) : (
+            <div className="flex flex-col gap-6">
+              {filteredProducts.map((product: Product) => (
+                <ProductCardList key={product.id} product={product} />
               ))}
             </div>
           )}

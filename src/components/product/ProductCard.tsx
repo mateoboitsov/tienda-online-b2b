@@ -21,15 +21,58 @@ export function ProductCard({ product }: ProductCardProps) {
   const [quantity, setQuantity] = useState(1);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
 
-  // Seleccionar primera variación por defecto
-  const firstVariation = product.variations[0];
+  // Función helper para parsear storage a número
+  const parseStorageToNumber = (storage: string): number => {
+    const match = storage.match(/(\d+)(GB|TB)/i);
+    if (!match) return 0;
+    const value = parseInt(match[1]);
+    const unit = match[2].toUpperCase();
+    return unit === 'TB' ? value * 1024 : value;
+  };
+
+  // Seleccionar primera variación con stock, priorizando menor capacidad
+  const getDefaultVariation = () => {
+    // Filtrar variaciones con stock disponible
+    const inStockVariations = product.variations.filter(v => v.stock > 0);
+
+    if (inStockVariations.length > 0) {
+      // Ordenar por capacidad (menor a mayor) y seleccionar la primera
+      const sorted = inStockVariations.sort((a, b) =>
+        parseStorageToNumber(a.storage) - parseStorageToNumber(b.storage)
+      );
+      return sorted[0];
+    }
+
+    // Si no hay stock, devolver la primera variación de menor capacidad
+    const sorted = [...product.variations].sort((a, b) =>
+      parseStorageToNumber(a.storage) - parseStorageToNumber(b.storage)
+    );
+    return sorted[0];
+  };
+
+  const firstVariation = getDefaultVariation();
   const [selectedVariationId, setSelectedVariationId] = useState(firstVariation.id);
   const selectedVariation = product.variations.find(v => v.id === selectedVariationId) || firstVariation;
 
   // Extraer opciones únicas de las variaciones
   const availableOptions = useMemo(() => {
+    // Función helper para ordenar storages
+    const sortStorages = (storages: string[]) => {
+      return storages.sort((a, b) => {
+        // Convertir a números para comparar (ej: "128GB" -> 128, "1TB" -> 1024)
+        const parseStorage = (str: string) => {
+          const match = str.match(/(\d+)(GB|TB)/i);
+          if (!match) return 0;
+          const value = parseInt(match[1]);
+          const unit = match[2].toUpperCase();
+          return unit === 'TB' ? value * 1024 : value;
+        };
+        return parseStorage(a) - parseStorage(b);
+      });
+    };
+
     return {
-      storages: [...new Set(product.variations.map(v => v.storage))],
+      storages: sortStorages([...new Set(product.variations.map(v => v.storage))]),
       colors: [...new Set(product.variations.map(v => v.color))],
       conditions: [...new Set(product.variations.map(v => v.condition))],
       productTypes: [...new Set(product.variations.map(v => v.productType))]
@@ -38,8 +81,8 @@ export function ProductCard({ product }: ProductCardProps) {
 
   // Precio y stock de la variación seleccionada
   const currentPrice = quantity >= 10 && selectedVariation.priceBulk
-    ? selectedVariation.priceBulk
-    : selectedVariation.price;
+    ? selectedVariation.priceBulk + 5
+    : selectedVariation.price + 5;
   const hasStock = selectedVariation.stock > 0;
 
   // Handlers - buscan y seleccionan la variación correspondiente
@@ -214,35 +257,10 @@ export function ProductCard({ product }: ProductCardProps) {
                       handleColorChange(color);
                     }}
                     className={`w-8 h-8 rounded-full transition-all duration-200 border-2 relative ${selectedVariation.color === color
-                      ? 'border-brand-green scale-110 opacity-100'
-                      : 'border-gray-200 hover:border-gray-300 opacity-50 hover:opacity-75'
-                      }`}
+                      ? 'border-brand-green scale-110 opacity-100 shadow-sm'
+                      : 'border-white opacity-80 hover:opacity-100'
+                      } ${getColorSwatch(color)}`}
                     title={color}
-                    style={{
-                      backgroundColor: getColorSwatch(color).replace('bg-', ''),
-                      // Mapeo directo de colores para asegurar que se apliquen
-                      ...(color === 'Negro' && { backgroundColor: '#000000' }),
-                      ...(color === 'Blanco' && { backgroundColor: '#ffffff', border: '1px solid #d1d5db' }),
-                      ...(color === 'Azul' && { backgroundColor: '#3b82f6' }),
-                      ...(color === 'Rosa' && { backgroundColor: '#f472b6' }),
-                      ...(color === 'Amarillo' && { backgroundColor: '#eab308' }),
-                      ...(color === 'Verde' && { backgroundColor: '#10b981' }),
-                      ...(color === 'Rojo' && { backgroundColor: '#ef4444' }),
-                      ...(color === 'Púrpura' && { backgroundColor: '#8b5cf6' }),
-                      ...(color === 'Oro' && { backgroundColor: '#d97706' }),
-                      ...(color === 'Plata' && { backgroundColor: '#9ca3af' }),
-                      ...(color === 'Natural' && { backgroundColor: '#d6d3d1' }),
-                      ...(color === 'Grafito' && { backgroundColor: '#4b5563' }),
-                      ...(color === 'Medianoche' && { backgroundColor: '#1f2937' }),
-                      ...(color === 'Estelar' && { backgroundColor: '#d1d5db' }),
-                      ...(color === 'Titanio Natural' && { backgroundColor: '#d6d3d1' }),
-                      ...(color === 'Titanio Azul' && { backgroundColor: '#93c5fd' }),
-                      ...(color === 'Titanio Blanco' && { backgroundColor: '#f3f4f6' }),
-                      ...(color === 'Titanio Negro' && { backgroundColor: '#374151' }),
-                      ...(color === 'Verde Sierra' && { backgroundColor: '#059669' }),
-                      ...(color === 'Azul Sierra' && { backgroundColor: '#2563eb' }),
-                      ...(color === 'Azul Pacífico' && { backgroundColor: '#60a5fa' }),
-                    }}
                   >
                     {selectedVariation.color === color && (
                       <div className="absolute -top-1 -right-1 w-4 h-4 bg-brand-green rounded-full border-2 border-white flex items-center justify-center">
@@ -334,20 +352,29 @@ export function ProductCard({ product }: ProductCardProps) {
       {/* Precios */}
       <div className="mb-4 text-left space-y-1">
         <div className="flex flex-col">
-          <div className="flex items-baseline gap-2">
-            <span className={`text-2xl font-bold ${quantity < 10 ? 'text-brand-black' : 'text-gray-400 line-through text-lg'}`}>
-              €{selectedVariation.price.toFixed(2)}
-            </span>
-            <span className="text-xs text-gray-500 font-medium">(&lt; 10 unid.)</span>
-          </div>
-
-          {selectedVariation.priceBulk && (
+          {selectedVariation.price === 0 || !selectedVariation.price ? (
             <div className="flex items-baseline gap-2">
-              <span className={`text-2xl font-bold ${quantity >= 10 ? 'text-brand-green' : 'text-gray-400 text-lg'}`}>
-                €{selectedVariation.priceBulk.toFixed(2)}
-              </span>
-              <span className="text-xs text-brand-green font-bold">(10+ unid. 🔥)</span>
+              <span className="text-2xl font-bold text-gray-400">N/A</span>
+              <span className="text-xs text-gray-500 font-medium">Precio a consultar</span>
             </div>
+          ) : (
+            <>
+              <div className="flex items-baseline gap-2">
+                <span className={`text-2xl font-bold ${quantity < 10 ? 'text-brand-black' : 'text-gray-400 line-through text-lg'}`}>
+                  €{(selectedVariation.price + 5).toFixed(2)}
+                </span>
+                <span className="text-xs text-gray-500 font-medium">(&lt; 10 unid.)</span>
+              </div>
+
+              {selectedVariation.priceBulk && selectedVariation.priceBulk > 0 && (
+                <div className="flex items-baseline gap-2">
+                  <span className={`text-2xl font-bold ${quantity >= 10 ? 'text-brand-green' : 'text-gray-400 text-lg'}`}>
+                    €{(selectedVariation.priceBulk + 5).toFixed(2)}
+                  </span>
+                  <span className="text-xs text-brand-green font-bold">(10+ unid. 🔥)</span>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>

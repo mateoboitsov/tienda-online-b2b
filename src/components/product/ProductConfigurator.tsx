@@ -9,12 +9,40 @@ import { getColorSwatch } from "@/lib/config/colorConstants";
 
 interface ProductConfiguratorProps {
   product: Product;
-  onConfigChange: (config: { storage: string; color: string; condition: string; productType: string }) => void;
+  onConfigChange: (config: { storage: string; color: string; condition: string; productType: string; packaging: string | null }) => void;
 }
 
 export function ProductConfigurator({ product, onConfigChange }: ProductConfiguratorProps) {
-  // Seleccionar la primera variación por defecto
-  const firstVariation = product.variations[0];
+  // Función helper para parsear storage a número
+  const parseStorageToNumber = (storage: string): number => {
+    const match = storage.match(/(\d+)(GB|TB)/i);
+    if (!match) return 0;
+    const value = parseInt(match[1]);
+    const unit = match[2].toUpperCase();
+    return unit === 'TB' ? value * 1024 : value;
+  };
+
+  // Seleccionar primera variación con stock, priorizando menor capacidad
+  const getDefaultVariation = () => {
+    // Filtrar variaciones con stock disponible
+    const inStockVariations = product.variations.filter(v => v.stock > 0);
+
+    if (inStockVariations.length > 0) {
+      // Ordenar por capacidad (menor a mayor) y seleccionar la primera
+      const sorted = inStockVariations.sort((a, b) =>
+        parseStorageToNumber(a.storage) - parseStorageToNumber(b.storage)
+      );
+      return sorted[0];
+    }
+
+    // Si no hay stock, devolver la primera variación de menor capacidad
+    const sorted = [...product.variations].sort((a, b) =>
+      parseStorageToNumber(a.storage) - parseStorageToNumber(b.storage)
+    );
+    return sorted[0];
+  };
+
+  const firstVariation = getDefaultVariation();
   const [selectedVariationId, setSelectedVariationId] = useState(firstVariation.id);
 
   // Encontrar la variación seleccionada
@@ -22,9 +50,34 @@ export function ProductConfigurator({ product, onConfigChange }: ProductConfigur
 
   // Extraer TODAS las opciones únicas (sin filtrar)
   const allOptions = useMemo(() => {
-    const storages = [...new Set(product.variations.map(v => v.storage))];
+    // Función helper para ordenar storages
+    const sortStorages = (storages: string[]) => {
+      return storages.sort((a, b) => {
+        const parseStorage = (str: string) => {
+          const match = str.match(/(\d+)(GB|TB)/i);
+          if (!match) return 0;
+          const value = parseInt(match[1]);
+          const unit = match[2].toUpperCase();
+          return unit === 'TB' ? value * 1024 : value;
+        };
+        return parseStorage(a) - parseStorage(b);
+      });
+    };
+
+    // Función helper para ordenar condiciones
+    const sortConditions = (conditions: string[]) => {
+      const priority: { [key: string]: number } = {
+        'NUEVO': 1,
+        'A+': 2,
+        'A': 3,
+        'B': 4
+      };
+      return [...conditions].sort((a, b) => (priority[a] || 99) - (priority[b] || 99));
+    };
+
+    const storages = sortStorages([...new Set(product.variations.map(v => v.storage))]);
     const colors = [...new Set(product.variations.map(v => v.color))];
-    const conditions = [...new Set(product.variations.map(v => v.condition))];
+    const conditions = sortConditions([...new Set(product.variations.map(v => v.condition))]);
     const productTypes = [...new Set(product.variations.map(v => v.productType))];
     return { storages, colors, conditions, productTypes };
   }, [product.variations]);
@@ -67,7 +120,8 @@ export function ProductConfigurator({ product, onConfigChange }: ProductConfigur
         storage: selectedVariation.storage,
         color: selectedVariation.color,
         condition: selectedVariation.condition,
-        productType: selectedVariation.productType
+        productType: selectedVariation.productType,
+        packaging: selectedVariation.packaging || null
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -191,33 +245,7 @@ export function ProductConfigurator({ product, onConfigChange }: ProductConfigur
                       }`}
                   >
                     <div
-                      className="w-4 h-4 rounded-full border border-gray-300 relative"
-                      style={{
-                        backgroundColor: getColorSwatch(color).replace('bg-', ''),
-                        // Mapeo directo de colores para asegurar que se apliquen
-                        ...(color === 'Negro' && { backgroundColor: '#000000' }),
-                        ...(color === 'Blanco' && { backgroundColor: '#ffffff', border: '1px solid #d1d5db' }),
-                        ...(color === 'Azul' && { backgroundColor: '#3b82f6' }),
-                        ...(color === 'Rosa' && { backgroundColor: '#f472b6' }),
-                        ...(color === 'Amarillo' && { backgroundColor: '#eab308' }),
-                        ...(color === 'Verde' && { backgroundColor: '#10b981' }),
-                        ...(color === 'Rojo' && { backgroundColor: '#ef4444' }),
-                        ...(color === 'Púrpura' && { backgroundColor: '#8b5cf6' }),
-                        ...(color === 'Oro' && { backgroundColor: '#d97706' }),
-                        ...(color === 'Plata' && { backgroundColor: '#9ca3af' }),
-                        ...(color === 'Natural' && { backgroundColor: '#d6d3d1' }),
-                        ...(color === 'Grafito' && { backgroundColor: '#4b5563' }),
-                        ...(color === 'Medianoche' && { backgroundColor: '#1f2937' }),
-                        ...(color === 'Estelar' && { backgroundColor: '#d1d5db' }),
-                        ...(color === 'Titanio Natural' && { backgroundColor: '#d6d3d1' }),
-                        ...(color === 'Titanio Azul' && { backgroundColor: '#93c5fd' }),
-                        ...(color === 'Titanio Blanco' && { backgroundColor: '#f3f4f6' }),
-                        ...(color === 'Titanio Negro' && { backgroundColor: '#374151' }),
-                        ...(color === 'Verde Sierra' && { backgroundColor: '#059669' }),
-                        ...(color === 'Azul Sierra' && { backgroundColor: '#2563eb' }),
-                        ...(color === 'Azul Pacífico' && { backgroundColor: '#60a5fa' }),
-                        ...(color === 'N/A' && { background: 'repeating-linear-gradient(45deg, #f3f4f6, #f3f4f6 2px, #d1d5db 2px, #d1d5db 4px)' }),
-                      }}
+                      className={`w-4 h-4 rounded-full border border-gray-100 shadow-sm ${getColorSwatch(color)}`}
                     >
                     </div>
                     <span className="text-sm font-medium">{color}</span>
@@ -271,28 +299,42 @@ export function ProductConfigurator({ product, onConfigChange }: ProductConfigur
             <span className="text-sm font-medium text-brand-black">Estado</span>
           </div>
           <div className="space-y-2">
-            {availableVariations.map((variation) => (
-              <div
-                key={variation.id}
-                onClick={() => setSelectedVariationId(variation.id)}
-                className={`p-3 rounded-lg cursor-pointer transition-all border ${selectedVariationId === variation.id
-                  ? 'bg-brand-green/10 border-brand-green text-brand-green'
-                  : 'bg-gray-50 border-gray-200 hover:bg-gray-100 text-gray-700'
-                  }`}
-              >
-                <div className="flex flex-col items-center gap-1">
-                  <Badge
-                    variant="outline"
-                    className={`text-xs ${getConditionColor(variation.condition)}`}
-                  >
-                    {variation.condition}
-                  </Badge>
-                  <span className="text-sm font-medium">
-                    €{variation.price.toFixed(2)}
-                  </span>
+            {allOptions.conditions.map((condition) => {
+              const matchingVariation = availableVariations.find(v => v.condition === condition);
+              // Fallback: buscar cualquier variación con esa condición si no hay match exacto
+              const fallbackVariation = product.variations.find(v => v.condition === condition);
+              const isAvailable = !!matchingVariation;
+              const isSelected = selectedVariation.condition === condition;
+              const displayVariation = matchingVariation || fallbackVariation;
+
+              return (
+                <div
+                  key={condition}
+                  onClick={() => handleConditionChange(condition)}
+                  className={`p-3 rounded-lg transition-all border flex-1 ${isSelected
+                    ? 'bg-brand-green/10 border-brand-green text-brand-green cursor-pointer'
+                    : isAvailable
+                      ? 'bg-gray-50 border-gray-200 hover:bg-gray-100 text-gray-700 cursor-pointer'
+                      : 'bg-gray-50/50 border-gray-200/50 text-gray-400 opacity-40 cursor-pointer hover:opacity-60'
+                    }`}
+                >
+                  <div className="flex flex-col items-center gap-1">
+                    <Badge
+                      variant="outline"
+                      className={`text-xs ${getConditionColor(condition)}`}
+                    >
+                      {condition}
+                    </Badge>
+                    <span className="text-sm font-medium">
+                      {displayVariation
+                        ? (displayVariation.price === 0 || !displayVariation.price ? 'N/A' : `€${displayVariation.price.toFixed(2)}`)
+                        : 'N/A'
+                      }
+                    </span>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </div>

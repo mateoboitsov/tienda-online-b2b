@@ -14,6 +14,7 @@ function mapToProductVariation(dbVariation: any): ProductVariation {
     price: Number(dbVariation.price),
     priceBulk: dbVariation.price_bulk ? Number(dbVariation.price_bulk) : null,
     stock: dbVariation.stock_quantity,
+    packaging: dbVariation.packaging as 'Original Box' | 'Standard' | null,
   };
 }
 
@@ -67,6 +68,7 @@ export async function createVariation(
       price: variationData.price ?? 0,
       price_bulk: variationData.priceBulk ?? null,
       stock_quantity: variationData.stock ?? 0,
+      packaging: variationData.packaging ?? null,
     })
     .select()
     .single();
@@ -94,6 +96,7 @@ export async function updateVariation(
   if (updates.price !== undefined) updateData.price = updates.price;
   if (updates.priceBulk !== undefined) updateData.price_bulk = updates.priceBulk;
   if (updates.stock !== undefined) updateData.stock_quantity = updates.stock;
+  if (updates.packaging !== undefined) updateData.packaging = updates.packaging;
 
   const { data, error } = await supabase
     .from('product_variations')

@@ -53,6 +53,8 @@ export default function ProductoVariacionesPage({ params }: { params: Promise<{ 
   const [producto, setProducto] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [deletingVariants, setDeletingVariants] = useState<Set<string>>(new Set());
+  const [editingVariantId, setEditingVariantId] = useState<string | null>(null);
+  const [editFormData, setEditFormData] = useState<any>({});
   const [formData, setFormData] = useState({
     storage: "",
     color: "",
@@ -126,8 +128,6 @@ export default function ProductoVariacionesPage({ params }: { params: Promise<{ 
       </div>
     );
   }
-
-  const totalStock = productVariants.reduce((sum: number, variant: any) => sum + (variant.stock || 0), 0);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev: any) => ({
@@ -204,7 +204,54 @@ export default function ProductoVariacionesPage({ params }: { params: Promise<{ 
     }
   };
 
+  const startEditingVariant = (variant: any) => {
+    setEditingVariantId(variant.id);
+    setEditFormData({
+      stock: variant.stock,
+      price: variant.price,
+      priceBulk: variant.priceBulk || '',
+      storage: variant.storage,
+      color: variant.color,
+      condition: variant.condition,
+      productType: variant.productType
+    });
+  };
 
+  const cancelEditingVariant = () => {
+    setEditingVariantId(null);
+    setEditFormData({});
+  };
+
+  const saveEditingVariant = async () => {
+    if (!editingVariantId) return;
+
+    try {
+      await updateVariation(editingVariantId, {
+        stock: parseInt(editFormData.stock),
+        price: parseFloat(editFormData.price),
+        priceBulk: editFormData.priceBulk ? parseFloat(editFormData.priceBulk) : null,
+        storage: editFormData.storage,
+        color: editFormData.color,
+        condition: editFormData.condition,
+        productType: editFormData.productType
+      });
+
+      // Actualizar la lista local
+      setProductVariants(productVariants.map(v =>
+        v.id === editingVariantId
+          ? { ...v, ...editFormData, priceBulk: editFormData.priceBulk || null }
+          : v
+      ));
+
+      setEditingVariantId(null);
+      setEditFormData({});
+    } catch (error) {
+      console.error('Error actualizando variación:', error);
+      alert('Error al actualizar la variación');
+    }
+  };
+
+  const totalStock = productVariants.reduce((sum: number, variant: any) => sum + (variant.stock || 0), 0);
 
   // Obtener condiciones disponibles según el tipo de producto seleccionado
   const getAvailableConditions = (productType: string) => {
@@ -287,57 +334,149 @@ export default function ProductoVariacionesPage({ params }: { params: Promise<{ 
 
               {/* Filas de variantes */}
               {productVariants.map((variant: any) => (
-                <div key={variant.id} className="px-4 py-3 border-b border-gray-100 hover:bg-gray-50">
-                  <div className="grid grid-cols-8 gap-4 items-center text-sm">
-                    <div className="font-medium">{variant.stock}</div>
-                    <div className="font-medium text-blue-600">€{variant.price}</div>
-                    <div className="font-medium text-green-600">
-                      {variant.priceBulk ? `€${variant.priceBulk}` : '-'}
+                <div key={variant.id} className={`px-4 py-3 border-b border-gray-100 ${editingVariantId === variant.id ? 'bg-blue-50' : 'hover:bg-gray-50'}`}>
+                  {editingVariantId === variant.id ? (
+                    /* Modo Edición */
+                    <div className="grid grid-cols-8 gap-4 items-center text-sm">
+                      <Input
+                        type="number"
+                        value={editFormData.stock}
+                        onChange={(e) => setEditFormData({ ...editFormData, stock: e.target.value })}
+                        className="h-8 text-xs"
+                      />
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={editFormData.price}
+                        onChange={(e) => setEditFormData({ ...editFormData, price: e.target.value })}
+                        className="h-8 text-xs"
+                      />
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={editFormData.priceBulk}
+                        onChange={(e) => setEditFormData({ ...editFormData, priceBulk: e.target.value })}
+                        className="h-8 text-xs"
+                        placeholder="-"
+                      />
+                      <Select value={editFormData.color} onValueChange={(value) => setEditFormData({ ...editFormData, color: value })}>
+                        <SelectTrigger className="h-8 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {availableColors.map(color => (
+                            <SelectItem key={color} value={color}>{color}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Select value={editFormData.storage} onValueChange={(value) => setEditFormData({ ...editFormData, storage: value })}>
+                        <SelectTrigger className="h-8 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {["64GB", "128GB", "256GB", "512GB", "1TB"].map(s => (
+                            <SelectItem key={s} value={s}>{s}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Select value={editFormData.productType} onValueChange={(value) => setEditFormData({ ...editFormData, productType: value })}>
+                        <SelectTrigger className="h-8 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="NUEVO">Nuevo</SelectItem>
+                          <SelectItem value="CPO">CPO</SelectItem>
+                          <SelectItem value="ASIS">ASIS</SelectItem>
+                          <SelectItem value="REACONDICIONADO">Reacond.</SelectItem>
+                          <SelectItem value="USADO">Usado</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Select value={editFormData.condition} onValueChange={(value) => setEditFormData({ ...editFormData, condition: value })}>
+                        <SelectTrigger className="h-8 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="NUEVO">NUEVO</SelectItem>
+                          <SelectItem value="A+">A+</SelectItem>
+                          <SelectItem value="A">A</SelectItem>
+                          <SelectItem value="B">B</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <div className="flex gap-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={saveEditingVariant}
+                          className="h-8 px-2 text-xs text-green-600 hover:text-green-700 hover:bg-green-50"
+                        >
+                          ✓
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={cancelEditingVariant}
+                          className="h-8 px-2 text-xs text-gray-600 hover:text-gray-700 hover:bg-gray-50"
+                        >
+                          ✕
+                        </Button>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <div className={`w-3 h-3 rounded-full ${getColorSwatch(variant.color)}`}></div>
-                      {variant.color}
+                  ) : (
+                    /* Modo Vista */
+                    <div className="grid grid-cols-8 gap-4 items-center text-sm">
+                      <div className="font-medium">{variant.stock}</div>
+                      <div className="font-medium text-blue-600">
+                        {variant.price === 0 || !variant.price ? 'N/A' : `€${variant.price}`}
+                      </div>
+                      <div className="font-medium text-green-600">
+                        {variant.priceBulk === 0 || !variant.priceBulk ? '-' : `€${variant.priceBulk}`}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className={`w-3 h-3 rounded-full ${getColorSwatch(variant.color)}`}></div>
+                        {variant.color}
+                      </div>
+                      <div>{variant.storage}</div>
+                      <div>
+                        <Badge
+                          variant="outline"
+                          className="text-xs bg-blue-50 border-blue-200 text-blue-700"
+                        >
+                          {variant.productType === 'NUEVO' ? 'Nuevo' :
+                            variant.productType === 'CPO' ? 'CPO' :
+                              variant.productType === 'ASIS' ? 'ASIS' :
+                                variant.productType === 'REACONDICIONADO' ? 'Reacond.' :
+                                  variant.productType === 'USADO' ? 'Usado' : variant.productType}
+                        </Badge>
+                      </div>
+                      <div>
+                        <Badge
+                          variant="outline"
+                          className={`text-xs ${getConditionColor(variant.condition)}`}
+                        >
+                          {variant.condition}
+                        </Badge>
+                      </div>
+                      <div className="flex gap-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => startEditingVariant(variant)}
+                          className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 h-8 px-2 text-xs"
+                        >
+                          Editar
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeProductVariant(variant.id)}
+                          disabled={deletingVariants.has(variant.id)}
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed h-8 px-2 text-xs"
+                        >
+                          {deletingVariants.has(variant.id) ? 'Eliminando...' : 'Eliminar'}
+                        </Button>
+                      </div>
                     </div>
-                    <div>{variant.storage}</div>
-                    <div>
-                      <Badge
-                        variant="outline"
-                        className="text-xs bg-blue-50 border-blue-200 text-blue-700"
-                      >
-                        {variant.productType === 'NUEVO' ? 'Nuevo' :
-                          variant.productType === 'CPO' ? 'CPO' :
-                            variant.productType === 'ASIS' ? 'ASIS' :
-                              variant.productType === 'REACONDICIONADO' ? 'Reacond.' :
-                                variant.productType === 'USADO' ? 'Usado' : variant.productType}
-                      </Badge>
-                    </div>
-                    <div>
-                      <Badge
-                        variant="outline"
-                        className={`text-xs ${getConditionColor(variant.condition)}`}
-                      >
-                        {variant.condition}
-                      </Badge>
-                    </div>
-                    <div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => removeProductVariant(variant.id)}
-                        disabled={deletingVariants.has(variant.id)}
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        {deletingVariants.has(variant.id) ? (
-                          <>
-                            <div className="w-3 h-3 border-2 border-red-600 border-t-transparent rounded-full animate-spin mr-2" />
-                            Eliminando...
-                          </>
-                        ) : (
-                          'Eliminar'
-                        )}
-                      </Button>
-                    </div>
-                  </div>
+                  )}
                 </div>
               ))}
             </div>

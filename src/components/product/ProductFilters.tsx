@@ -37,7 +37,7 @@ export function ProductFilters({ products, onFilteredProductsChange }: ProductFi
     }
 
     const categories = [...new Set(products.map(p => p.category))].filter(Boolean);
-    
+
     // Extraer de todas las variaciones de todos los productos
     const allVariations = products.flatMap(p => p.variations || []);
     const conditions = [...new Set(allVariations.map(v => v.condition))].filter(Boolean);
@@ -69,7 +69,7 @@ export function ProductFilters({ products, onFilteredProductsChange }: ProductFi
       if (selectedCategory !== "all" && product.category !== selectedCategory) {
         return false;
       }
-      
+
       // Verificar si el producto tiene variaciones que coincidan con los filtros
       const matchingVariations = product.variations.filter(variation => {
         // Condición
@@ -94,7 +94,7 @@ export function ProductFilters({ products, onFilteredProductsChange }: ProductFi
         }
         return true;
       });
-      
+
       // El producto pasa el filtro si tiene al menos una variación que coincida
       return matchingVariations.length > 0;
     });
@@ -128,9 +128,9 @@ export function ProductFilters({ products, onFilteredProductsChange }: ProductFi
   ].filter(Boolean).length;
 
   return (
-    <div className="mb-8">
+    <div>
       {/* Barra de búsqueda y botón de filtros */}
-      <div className="flex flex-col sm:flex-row gap-4 mb-6">
+      <div className="flex flex-col sm:flex-row gap-4">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
           <Input
@@ -212,11 +212,11 @@ export function ProductFilters({ products, onFilteredProductsChange }: ProductFi
                   <SelectItem value="all">Todos los tipos</SelectItem>
                   {filterOptions.productTypes.map((type, index) => (
                     <SelectItem key={`type-${index}-${type}`} value={type}>
-                      {type === 'NUEVO' ? 'Nuevo' : 
-                       type === 'CPO' ? 'CPO (Certified Pre-Owned)' : 
-                       type === 'ASIS' ? 'Apple ASIS' : 
-                       type === 'REACONDICIONADO' ? 'Reacond. Premium' : 
-                       type === 'USADO' ? 'Usado 100% Original' : type}
+                      {type === 'NUEVO' ? 'Nuevo' :
+                        type === 'CPO' ? 'CPO (Certified Pre-Owned)' :
+                          type === 'ASIS' ? 'Apple ASIS' :
+                            type === 'REACONDICIONADO' ? 'Reacond. Premium' :
+                              type === 'USADO' ? 'Usado 100% Original' : type}
                     </SelectItem>
                   ))}
                 </SelectContent>

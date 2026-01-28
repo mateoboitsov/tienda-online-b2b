@@ -22,20 +22,6 @@ export default function AdminPage() {
           <h1 className="text-4xl font-bold text-gray-900 mb-4">
             Panel de Administración
           </h1>
-          <p className="text-xl text-gray-600">
-            Bienvenido, {user.email}
-          </p>
-        </div>
-
-        {/* Información del usuario */}
-        <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Información de tu cuenta</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-            <div><strong>ID:</strong> {user.id}</div>
-            <div><strong>Email:</strong> {user.email}</div>
-            <div><strong>Rol:</strong> {user.role}</div>
-            <div><strong>Email Confirmado:</strong> {user.emailConfirmed ? '✅ Sí' : '❌ No'}</div>
-          </div>
         </div>
 
         {/* Navegación principal */}

@@ -71,6 +71,7 @@ export interface DatabaseProductVariation {
   price_bulk: number | null
   stock_quantity: number
   created_at: string
+  packaging: string | null
 }
 
 // Interfaces legacy para compatibilidad con código existente (antes de Supabase)
@@ -83,6 +84,7 @@ export interface ProductVariation {
   price: number;
   priceBulk: number | null;
   stock: number;
+  packaging: 'Original Box' | 'Standard' | null;
 }
 
 export interface Product {
@@ -92,6 +94,9 @@ export interface Product {
   image: string;
   images: string[];
   category: string;
+  brand?: string;
+  model?: string;
+  region?: string;
   variations: ProductVariation[];
   price?: number;
   inStock?: boolean;

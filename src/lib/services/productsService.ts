@@ -12,6 +12,9 @@ async function mapToProduct(dbProduct: any, variations: ProductVariation[]): Pro
     image: dbProduct.images?.[0] || '',
     images: dbProduct.images || [],
     category: dbProduct.category,
+    brand: dbProduct.brand,
+    model: dbProduct.model,
+    region: dbProduct.region,
     variations: variations,
     accessories: dbProduct.accessories as { screenProtector: boolean; caseWithCharger: boolean } | undefined,
   };
