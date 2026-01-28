@@ -1,4 +1,4 @@
-import { ProductVariation } from '../config/data';
+import { ProductVariation } from '../types/database';
 import { createClient } from '../supabase/client';
 
 

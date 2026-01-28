@@ -1,6 +1,6 @@
 import { DatabaseProduct } from '../types/database';
 import { createClient } from '../supabase/client';
-import { Product, ProductVariation } from '../config/data';
+import { Product, ProductVariation } from '../types/database';
 import { getProductVariations } from './variationsService';
 
 // Función helper para transformar DatabaseProduct + variaciones a Product
