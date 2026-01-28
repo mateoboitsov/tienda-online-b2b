@@ -37,7 +37,7 @@ interface FormErrors {
 }
 
 export default function B2BLogin() {
-  const { user } = useAuth();
+  const { user, supabase } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
   const [formData, setFormData] = useState<FormData>({
     email: '',
@@ -93,8 +93,6 @@ export default function B2BLogin() {
 
     setLoading(true);
     setMessage(null);
-
-    const { supabase } = useAuth();
 
     try {
       if (isLogin) {
@@ -396,29 +394,6 @@ export default function B2BLogin() {
                       <p className="text-red-500 text-xs mt-1">{formErrors.phone}</p>
                     )}
                   </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="email" className="text-sm font-medium text-gray-700">
-                      Email *
-                    </Label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                      <Input
-                        id="email"
-                        name="email"
-                        type="email"
-                        required
-                        className={`pl-10 ${formErrors.email ? 'border-red-500' : ''}`}
-                        value={formData.email}
-                        onChange={(e) => handleInputChange('email', e.target.value)}
-                        placeholder="tu@empresa.com"
-                        autoComplete="email"
-                      />
-                    </div>
-                    {formErrors.email && (
-                      <p className="text-red-500 text-xs mt-1">{formErrors.email}</p>
-                    )}
-                  </div>
                 </div>
               </>
             )}
@@ -438,7 +413,7 @@ export default function B2BLogin() {
                   value={formData.email}
                   onChange={(e) => handleInputChange('email', e.target.value)}
                   placeholder="tu@empresa.com"
-                  autoComplete="email"
+                  autoComplete="username"
                 />
               </div>
               {formErrors.email && (
@@ -496,6 +471,6 @@ export default function B2BLogin() {
           </form>
         </CardContent>
       </Card>
-    </div>
+    </div >
   );
 }

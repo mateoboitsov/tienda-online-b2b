@@ -70,8 +70,8 @@ function saveCartToStorage(state: CartState) {
 const cartReducer = (state: CartState, action: CartAction): CartState => {
   switch (action.type) {
     case "ADD_ITEM": {
-      // Crear un identificador único basado en id + configuración
-      const uniqueId = `${action.payload.id}-${action.payload.storage}-${action.payload.color}-${action.payload.condition}`;
+      // Crear un identificador único basado en id + configuración + accesorios
+      const uniqueId = `${action.payload.id}-${action.payload.storage}-${action.payload.color}-${action.payload.condition}-${action.payload.accessories?.screenProtector ? 'sp' : 'no'}-${action.payload.accessories?.caseWithCharger ? 'cc' : 'no'}`;
 
       const existingItem = state.items.find(item => item.uniqueId === uniqueId);
 

@@ -68,6 +68,7 @@ export interface DatabaseProductVariation {
   condition: string
   product_type: string
   price: number
+  price_bulk: number | null
   stock_quantity: number
   created_at: string
 }
@@ -80,6 +81,7 @@ export interface ProductVariation {
   condition: 'NUEVO' | 'A+' | 'A' | 'B' | string;
   productType: 'NUEVO' | 'CPO' | 'ASIS' | 'REACONDICIONADO' | 'USADO' | string;
   price: number;
+  priceBulk: number | null;
   stock: number;
 }
 

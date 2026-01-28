@@ -17,9 +17,9 @@ interface ProductImageGalleryProps {
 // Función helper para obtener placeholder por categoría
 const getCategoryPlaceholder = (category?: string): string => {
   if (!category) return productImageConfig.placeholders.smartphone;
-  
+
   const categoryLower = category.toLowerCase();
-  
+
   if (categoryLower.includes('smartphone') || categoryLower.includes('phone') || categoryLower.includes('móvil')) {
     return productImageConfig.placeholders.smartphone;
   } else if (categoryLower.includes('laptop') || categoryLower.includes('portatil') || categoryLower.includes('notebook')) {
@@ -63,19 +63,19 @@ export function ProductImageGallery({ images, productName, category, isInStock =
   useEffect(() => {
     const processImages = async () => {
       setIsLoading(true);
-      
+
       // Si no hay imágenes personalizadas, usar imágenes por defecto de la categoría
       let imageList = images || [];
-      
+
       if (imageList.length === 0) {
-        // Usar imágenes por defecto basadas en la categoría
-        console.log(`🖼️ Cargando imágenes por defecto para categoría: "${category || 'Smartphones'}"`);
-        imageList = productImageConfig.getImagesByCategory(category || 'Smartphones');
+        // Usar imágenes por defecto basadas en la categoría y nombre del producto
+        console.log(`🖼️ Cargando imágenes por defecto para: "${productName}" (${category || 'Smartphones'})`);
+        imageList = productImageConfig.getImagesByCategory(category || 'Smartphones', productName);
         console.log(`🖼️ Imágenes seleccionadas:`, imageList);
       } else {
         console.log(`🖼️ Usando imágenes personalizadas:`, imageList);
       }
-      
+
       // Validar cada imagen
       const validatedImages: string[] = [];
       for (const img of imageList) {
@@ -89,19 +89,19 @@ export function ProductImageGallery({ images, productName, category, isInStock =
           continue;
         }
       }
-      
+
       // Si no hay imágenes válidas, usar placeholder basado en la categoría
       if (validatedImages.length === 0) {
         const categoryPlaceholder = getCategoryPlaceholder(category);
         validatedImages.push(categoryPlaceholder);
       }
-      
+
       setValidImages(validatedImages);
       setIsLoading(false);
     };
-    
+
     processImages();
-  }, [images, category]);
+  }, [images, category, productName]);
 
   // Si no hay imágenes, mostrar placeholder
   if (isLoading) {
@@ -141,13 +141,12 @@ export function ProductImageGallery({ images, productName, category, isInStock =
       <div className="relative group">
         <div className="bg-gray-50 rounded-2xl overflow-hidden border border-gray-200 min-h-[500px] flex items-center justify-center relative">
           {/* Badge de stock - position absolute */}
-          <Badge 
+          <Badge
             variant={isInStock ? "default" : "secondary"}
-            className={`absolute top-4 left-4 z-10 text-base px-4 py-2 ${
-              isInStock 
-                ? "bg-brand-green text-white" 
-                : "bg-gray-200 text-gray-600"
-            }`}
+            className={`absolute top-4 left-4 z-10 text-base px-4 py-2 ${isInStock
+              ? "bg-brand-green text-white"
+              : "bg-gray-200 text-gray-600"
+              }`}
           >
             {isInStock ? (
               <CheckCircle className="h-4 w-4 mr-2" />
@@ -160,11 +159,10 @@ export function ProductImageGallery({ images, productName, category, isInStock =
             <img
               src={validImages[currentImageIndex]}
               alt={`${productName} - Imagen ${currentImageIndex + 1}`}
-              className={`w-full h-full object-contain transition-all duration-500 ease-in-out ${
-                isZoomed ? 'scale-110' : 'scale-100'
-              }`}
+              className={`w-full h-full object-contain transition-all duration-500 ease-in-out ${isZoomed ? 'scale-110' : 'scale-100'
+                }`}
               key={currentImageIndex}
-                          onError={(e) => {
+              onError={(e) => {
                 // Fallback a placeholder si la imagen falla
                 const target = e.target as HTMLImageElement;
                 target.style.display = 'none';
@@ -186,7 +184,7 @@ export function ProductImageGallery({ images, productName, category, isInStock =
               }}
             />
           </div>
-          
+
           {/* Botón de zoom */}
           <Button
             onClick={toggleZoom}
@@ -209,7 +207,7 @@ export function ProductImageGallery({ images, productName, category, isInStock =
             >
               <ChevronLeft className="h-5 w-5" />
             </Button>
-            
+
             <Button
               onClick={nextImage}
               variant="ghost"
@@ -227,11 +225,11 @@ export function ProductImageGallery({ images, productName, category, isInStock =
             {currentImageIndex + 1} / {validImages.length}
           </div>
         )}
-        
+
         {/* Indicador de progreso */}
         {validImages.length > 1 && (
           <div className="absolute bottom-16 left-1/2 -translate-x-1/2 w-32 h-1 bg-gray-200 rounded-full overflow-hidden">
-            <div 
+            <div
               className="h-full bg-brand-green transition-all duration-300"
               style={{ width: `${((currentImageIndex + 1) / validImages.length) * 100}%` }}
             />
@@ -246,11 +244,10 @@ export function ProductImageGallery({ images, productName, category, isInStock =
             <button
               key={index}
               onClick={() => goToImage(index)}
-              className={`w-20 h-20 rounded-lg overflow-hidden border-2 transition-all duration-200 ${
-                index === currentImageIndex
-                  ? 'border-brand-green ring-2 ring-brand-green/20'
-                  : 'border-gray-200 hover:border-gray-300'
-              }`}
+              className={`w-20 h-20 rounded-lg overflow-hidden border-2 transition-all duration-200 ${index === currentImageIndex
+                ? 'border-brand-green ring-2 ring-brand-green/20'
+                : 'border-gray-200 hover:border-gray-300'
+                }`}
             >
               <img
                 src={image}
@@ -278,13 +275,13 @@ export function ProductImageGallery({ images, productName, category, isInStock =
       {/* Modal de zoom */}
       {isZoomed && (
         <div className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4">
-                  <div className="relative max-w-4xl max-h-full">
-          <img
-            src={validImages[currentImageIndex]}
-            alt={`${productName} - Zoom`}
+          <div className="relative max-w-4xl max-h-full">
+            <img
+              src={validImages[currentImageIndex]}
+              alt={`${productName} - Zoom`}
               className="w-full h-full object-contain max-h-[90vh]"
             />
-            
+
             {/* Botón de cerrar */}
             <Button
               onClick={closeZoom}
@@ -306,7 +303,7 @@ export function ProductImageGallery({ images, productName, category, isInStock =
                 >
                   <ChevronLeft className="h-6 w-6" />
                 </Button>
-                
+
                 <Button
                   onClick={nextImage}
                   variant="ghost"
@@ -324,11 +321,11 @@ export function ProductImageGallery({ images, productName, category, isInStock =
                 {currentImageIndex + 1} / {validImages.length}
               </div>
             )}
-            
+
             {/* Indicador de progreso en zoom */}
             {validImages.length > 1 && (
               <div className="absolute bottom-20 left-1/2 -translate-x-1/2 w-48 h-2 bg-white/20 rounded-full overflow-hidden">
-                <div 
+                <div
                   className="h-full bg-white transition-all duration-300"
                   style={{ width: `${((currentImageIndex + 1) / validImages.length) * 100}%` }}
                 />

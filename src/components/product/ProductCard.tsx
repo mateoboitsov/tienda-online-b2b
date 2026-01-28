@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { getColorSwatch } from "@/lib/config/colorConstants";
+import { productImageConfig } from "@/lib/config/imageConfig";
 
 interface ProductCardProps {
   product: Product;
@@ -36,27 +37,29 @@ export function ProductCard({ product }: ProductCardProps) {
   }, [product.variations]);
 
   // Precio y stock de la variación seleccionada
-  const currentPrice = selectedVariation.price;
+  const currentPrice = quantity >= 10 && selectedVariation.priceBulk
+    ? selectedVariation.priceBulk
+    : selectedVariation.price;
   const hasStock = selectedVariation.stock > 0;
 
   // Handlers - buscan y seleccionan la variación correspondiente
   const handleStorageChange = (newStorage: string) => {
-    const newVariation = product.variations.find(v => 
+    const newVariation = product.variations.find(v =>
       v.storage === newStorage && v.color === selectedVariation.color
     ) || product.variations.find(v => v.storage === newStorage);
     if (newVariation) setSelectedVariationId(newVariation.id);
   };
 
   const handleColorChange = (newColor: string) => {
-    const newVariation = product.variations.find(v => 
+    const newVariation = product.variations.find(v =>
       v.storage === selectedVariation.storage && v.color === newColor
     ) || product.variations.find(v => v.color === newColor);
     if (newVariation) setSelectedVariationId(newVariation.id);
   };
 
   const handleProductTypeChange = (newProductType: string) => {
-    const newVariation = product.variations.find(v => 
-      v.storage === selectedVariation.storage && 
+    const newVariation = product.variations.find(v =>
+      v.storage === selectedVariation.storage &&
       v.color === selectedVariation.color &&
       v.productType === newProductType
     );
@@ -66,7 +69,7 @@ export function ProductCard({ product }: ProductCardProps) {
   const handleAddToCart = async (e: React.MouseEvent) => {
     e.stopPropagation();
     setIsAddingToCart(true);
-    
+
     // Crear nombre descriptivo basado en accesorios
     let productName = product.name;
     if (product.accessories) {
@@ -78,7 +81,7 @@ export function ProductCard({ product }: ProductCardProps) {
         productName += ' (Protector de pantalla)';
       }
     }
-    
+
     const configuredProduct = {
       ...product,
       name: productName,
@@ -88,11 +91,11 @@ export function ProductCard({ product }: ProductCardProps) {
       productType: selectedVariation.productType,
       price: currentPrice
     };
-    
+
     for (let i = 0; i < quantity; i++) {
       dispatch({ type: "ADD_ITEM", payload: configuredProduct });
     }
-    
+
     // Efecto visual de 300ms
     setTimeout(() => {
       setIsAddingToCart(false);
@@ -117,29 +120,37 @@ export function ProductCard({ product }: ProductCardProps) {
 
 
   return (
-    <div 
+    <div
       onClick={handleProductClick}
       className="group bg-white rounded-2xl p-6 border border-gray-100 hover:border-brand-neon/30 hover:shadow-lg hover:shadow-brand-neon/10 transition-all duration-200 cursor-pointer"
     >
       {/* Estado del producto */}
       <div className="mb-4 text-left">
-        <Badge 
+        <Badge
           variant={hasStock ? "default" : "secondary"}
-          className={`text-sm px-3 py-1 ${
-            hasStock 
-              ? "bg-brand-green text-white" 
-              : "bg-gray-200 text-gray-600"
-          }`}
+          className={`text-sm px-3 py-1 ${hasStock
+            ? "bg-brand-green text-white"
+            : "bg-gray-200 text-gray-600"
+            }`}
         >
           {hasStock ? "En Stock" : "Agotado"}
         </Badge>
       </div>
-      
+
+      {/* Imagen del producto */}
+      <div className="mb-4 bg-gray-50 rounded-xl overflow-hidden aspect-square flex items-center justify-center p-4">
+        <img
+          src={product.image || productImageConfig.getAutomaticImage(product.name) || productImageConfig.placeholders.smartphone}
+          alt={product.name}
+          className="w-full h-full object-contain group-hover:scale-110 transition-transform duration-300"
+        />
+      </div>
+
       {/* Título */}
       <h3 className="text-lg font-semibold text-brand-black mb-3 group-hover:text-brand-green transition-colors text-left">
         {product.name}
       </h3>
-      
+
       {/* Descripción */}
       <p className="text-sm text-gray-600 mb-4 line-clamp-2 text-left">
         {product.description}
@@ -148,11 +159,10 @@ export function ProductCard({ product }: ProductCardProps) {
       {/* Configuración del producto */}
       <div className="space-y-3 mb-4">
         {/* Storage */}
-        {availableOptions.storages.length > 1 && (
-          <div className="flex items-center gap-2">
-            <HardDrive className="w-4 h-4 text-gray-500" />
-            {availableOptions.storages.length <= 6 ? (
-              // Mostrar como círculos si hay 6 o menos opciones
+        <div className="flex items-center gap-2">
+          <HardDrive className="w-4 h-4 text-gray-500" />
+          {availableOptions.storages.length > 1 ? (
+            availableOptions.storages.length <= 6 ? (
               <div className="flex gap-2">
                 {availableOptions.storages.map((storage) => (
                   <button
@@ -161,11 +171,10 @@ export function ProductCard({ product }: ProductCardProps) {
                       e.stopPropagation();
                       handleStorageChange(storage);
                     }}
-                    className={`w-8 h-8 rounded-full text-xs font-medium transition-all duration-200 ${
-                      selectedVariation.storage === storage
-                        ? 'bg-brand-green text-white ring-2 ring-brand-green/30'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    }`}
+                    className={`w-8 h-8 rounded-full text-xs font-medium transition-all duration-200 ${selectedVariation.storage === storage
+                      ? 'bg-brand-green text-white ring-2 ring-brand-green/30'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
                     title={storage}
                   >
                     {storage.replace(/gb/gi, '')}
@@ -173,7 +182,6 @@ export function ProductCard({ product }: ProductCardProps) {
                 ))}
               </div>
             ) : (
-              // Mostrar como dropdown si hay más de 4 opciones
               <select
                 value={selectedVariation.storage}
                 onChange={(e) => handleStorageChange(e.target.value)}
@@ -186,16 +194,17 @@ export function ProductCard({ product }: ProductCardProps) {
                   </option>
                 ))}
               </select>
-            )}
-          </div>
-        )}
+            )
+          ) : (
+            <span className="text-sm font-medium text-gray-700">{selectedVariation.storage}</span>
+          )}
+        </div>
 
         {/* Color */}
-        {availableOptions.colors.length > 1 && (
+        {!(availableOptions.colors.length === 1 && availableOptions.colors[0] === 'N/A') && (
           <div className="flex items-center gap-2">
             <Palette className="w-4 h-4 text-gray-500" />
-            {availableOptions.colors.length <= 6 ? (
-              // Mostrar como círculos si hay 6 o menos opciones
+            {availableOptions.colors.length > 1 ? (
               <div className="flex gap-2">
                 {availableOptions.colors.map((color) => (
                   <button
@@ -204,11 +213,10 @@ export function ProductCard({ product }: ProductCardProps) {
                       e.stopPropagation();
                       handleColorChange(color);
                     }}
-                    className={`w-8 h-8 rounded-full transition-all duration-200 border-2 relative ${
-                      selectedVariation.color === color
-                        ? 'border-brand-green scale-110 opacity-100'
-                        : 'border-gray-200 hover:border-gray-300 opacity-50 hover:opacity-75'
-                    }`}
+                    className={`w-8 h-8 rounded-full transition-all duration-200 border-2 relative ${selectedVariation.color === color
+                      ? 'border-brand-green scale-110 opacity-100'
+                      : 'border-gray-200 hover:border-gray-300 opacity-50 hover:opacity-75'
+                      }`}
                     title={color}
                     style={{
                       backgroundColor: getColorSwatch(color).replace('bg-', ''),
@@ -236,7 +244,6 @@ export function ProductCard({ product }: ProductCardProps) {
                       ...(color === 'Azul Pacífico' && { backgroundColor: '#60a5fa' }),
                     }}
                   >
-                    {/* Indicador de selección */}
                     {selectedVariation.color === color && (
                       <div className="absolute -top-1 -right-1 w-4 h-4 bg-brand-green rounded-full border-2 border-white flex items-center justify-center">
                         <svg className="w-2 h-2 text-white" fill="currentColor" viewBox="0 0 20 20">
@@ -248,27 +255,26 @@ export function ProductCard({ product }: ProductCardProps) {
                 ))}
               </div>
             ) : (
-              // Mostrar como dropdown si hay más de 6 opciones
-              <select
-                value={selectedVariation.color}
-                onChange={(e) => handleColorChange(e.target.value)}
-                onClick={(e) => e.stopPropagation()}
-                className="text-sm border border-gray-200 rounded px-2 py-1 bg-white"
-              >
-                {availableOptions.colors.map((color) => (
-                  <option key={color} value={color}>
-                    {color}
-                  </option>
-                ))}
-              </select>
+              <div className="flex items-center gap-2">
+                <div
+                  className="w-4 h-4 rounded-full border border-gray-200"
+                  style={{
+                    backgroundColor: getColorSwatch(selectedVariation.color).replace('bg-', ''),
+                    ...(selectedVariation.color === 'Negro' && { backgroundColor: '#000000' }),
+                    ...(selectedVariation.color === 'Blanco' && { backgroundColor: '#ffffff' }),
+                    // ... otros colores si es necesario, pero con el nombre al lado basta
+                  }}
+                />
+                <span className="text-sm font-medium text-gray-700">{selectedVariation.color}</span>
+              </div>
             )}
           </div>
         )}
 
         {/* Tipo de Producto */}
-        {availableOptions.productTypes.length > 1 && (
-          <div className="flex items-center gap-2">
-            <Shield className="w-4 h-4 text-gray-500" />
+        <div className="flex items-center gap-2">
+          <Shield className="w-4 h-4 text-gray-500" />
+          {availableOptions.productTypes.length > 1 ? (
             <select
               value={selectedVariation.productType}
               onChange={(e) => handleProductTypeChange(e.target.value)}
@@ -277,25 +283,32 @@ export function ProductCard({ product }: ProductCardProps) {
             >
               {availableOptions.productTypes.map((productType) => (
                 <option key={productType} value={productType}>
-                  {productType === 'NUEVO' ? 'Nuevo' : 
-                   productType === 'CPO' ? 'CPO (Certified Pre-Owned)' : 
-                   productType === 'ASIS' ? 'Apple ASIS' : 
-                   productType === 'REACONDICIONADO' ? 'Reacond. Premium' : 'Usado 100% Original'}
+                  {productType === 'NUEVO' ? 'Nuevo' :
+                    productType === 'CPO' ? 'CPO' :
+                      productType === 'ASIS' ? 'Apple ASIS' :
+                        productType === 'REACONDICIONADO' ? 'Reacond.' : productType}
                 </option>
               ))}
             </select>
-          </div>
-        )}
+          ) : (
+            <span className="text-sm font-medium text-gray-700">
+              {selectedVariation.productType === 'NUEVO' ? 'Nuevo' :
+                selectedVariation.productType === 'CPO' ? 'Certified Pre-Owned (CPO)' :
+                  selectedVariation.productType === 'ASIS' ? 'Apple ASIS' :
+                    selectedVariation.productType === 'REACONDICIONADO' ? 'Reacondicionado' : selectedVariation.productType}
+            </span>
+          )}
+        </div>
 
         {/* Condition */}
-        {availableOptions.conditions.length > 1 && (
-          <div className="flex items-center gap-2">
-            <Star className="w-4 h-4 text-gray-500" />
+        <div className="flex items-center gap-2">
+          <Star className="w-4 h-4 text-gray-500" />
+          {availableOptions.conditions.length > 1 ? (
             <select
               value={selectedVariation.condition}
               onChange={(e) => {
-                const newVariation = product.variations.find(v => 
-                  v.storage === selectedVariation.storage && 
+                const newVariation = product.variations.find(v =>
+                  v.storage === selectedVariation.storage &&
                   v.color === selectedVariation.color &&
                   v.condition === e.target.value
                 );
@@ -310,15 +323,33 @@ export function ProductCard({ product }: ProductCardProps) {
                 </option>
               ))}
             </select>
-          </div>
-        )}
+          ) : (
+            <Badge variant="outline" className={`text-xs ${getConditionColor(selectedVariation.condition)}`}>
+              Estado {selectedVariation.condition}
+            </Badge>
+          )}
+        </div>
       </div>
 
-      {/* Precio */}
-      <div className="mb-4 text-left">
-        <span className="text-2xl font-bold text-brand-black">
-          €{currentPrice.toFixed(2)}
-        </span>
+      {/* Precios */}
+      <div className="mb-4 text-left space-y-1">
+        <div className="flex flex-col">
+          <div className="flex items-baseline gap-2">
+            <span className={`text-2xl font-bold ${quantity < 10 ? 'text-brand-black' : 'text-gray-400 line-through text-lg'}`}>
+              €{selectedVariation.price.toFixed(2)}
+            </span>
+            <span className="text-xs text-gray-500 font-medium">(&lt; 10 unid.)</span>
+          </div>
+
+          {selectedVariation.priceBulk && (
+            <div className="flex items-baseline gap-2">
+              <span className={`text-2xl font-bold ${quantity >= 10 ? 'text-brand-green' : 'text-gray-400 text-lg'}`}>
+                €{selectedVariation.priceBulk.toFixed(2)}
+              </span>
+              <span className="text-xs text-brand-green font-bold">(10+ unid. 🔥)</span>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Controles de cantidad y carrito */}
@@ -336,7 +367,7 @@ export function ProductCard({ product }: ProductCardProps) {
           >
             <Minus className="h-3 w-3" />
           </Button>
-          
+
           <Input
             type="number"
             min="1"
@@ -352,7 +383,7 @@ export function ProductCard({ product }: ProductCardProps) {
             onClick={(e) => e.stopPropagation()}
             className="w-16 h-8 text-center text-sm"
           />
-          
+
           <Button
             variant="outline"
             size="sm"
@@ -370,11 +401,10 @@ export function ProductCard({ product }: ProductCardProps) {
         <Button
           onClick={handleAddToCart}
           disabled={!hasStock}
-          className={`w-full ${
-            hasStock 
-              ? 'bg-brand-green hover:bg-brand-green/90 text-white' 
-              : 'bg-gray-200 text-gray-500 cursor-not-allowed'
-          }`}
+          className={`w-full ${hasStock
+            ? 'bg-brand-green hover:bg-brand-green/90 text-white'
+            : 'bg-gray-200 text-gray-500 cursor-not-allowed'
+            }`}
         >
           {isAddingToCart ? (
             <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />

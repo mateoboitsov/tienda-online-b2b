@@ -59,7 +59,8 @@ export default function ProductoVariacionesPage({ params }: { params: Promise<{ 
     condition: "A+",
     productType: "CPO",
     stockQuantity: "",
-    variantPrice: ""
+    variantPrice: "",
+    variantPriceBulk: ""
   });
   const [productVariants, setProductVariants] = useState<any[]>([]);
 
@@ -67,7 +68,7 @@ export default function ProductoVariacionesPage({ params }: { params: Promise<{ 
   const availableColors = useMemo(() => {
     const colorsFromVariations = new Set(productVariants.map((v: any) => v.color));
     // Agregar colores comunes por si acaso
-    const commonColors = ["Negro", "Blanco", "Azul", "Rosa", "Amarillo", "Verde", "Rojo", "Púrpura", "Oro", "Plata", "Grafito", "Medianoche", "Estelar", "Titanio Natural", "Titanio Azul", "Titanio Blanco", "Titanio Negro", "Verde Sierra", "Azul Sierra", "Azul Pacífico"];
+    const commonColors = ["N/A", "Negro", "Blanco", "Azul", "Rosa", "Amarillo", "Verde", "Rojo", "Púrpura", "Oro", "Plata", "Grafito", "Medianoche", "Estelar", "Titanio Natural", "Titanio Azul", "Titanio Blanco", "Titanio Negro", "Verde Sierra", "Azul Sierra", "Azul Pacífico"];
     commonColors.forEach(c => colorsFromVariations.add(c));
     return Array.from(colorsFromVariations).sort();
   }, [productVariants]);
@@ -148,6 +149,7 @@ export default function ProductoVariacionesPage({ params }: { params: Promise<{ 
         condition: formData.condition as 'NUEVO' | 'A+' | 'A' | 'B',
         productType: formData.productType as 'NUEVO' | 'CPO' | 'ASIS' | 'REACONDICIONADO' | 'USADO',
         price: parseFloat(formData.variantPrice),
+        priceBulk: formData.variantPriceBulk ? parseFloat(formData.variantPriceBulk) : null,
         stock: parseInt(formData.stockQuantity)
       });
 
@@ -161,7 +163,8 @@ export default function ProductoVariacionesPage({ params }: { params: Promise<{ 
         condition: "A+",
         productType: "CPO",
         stockQuantity: "",
-        variantPrice: ""
+        variantPrice: "",
+        variantPriceBulk: ""
       }));
 
       alert("Variación creada exitosamente");
@@ -270,9 +273,10 @@ export default function ProductoVariacionesPage({ params }: { params: Promise<{ 
             <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
               {/* Header de la tabla */}
               <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
-                <div className="grid grid-cols-7 gap-4 text-sm font-medium text-gray-700">
+                <div className="grid grid-cols-8 gap-4 text-sm font-medium text-gray-700">
                   <div>Cantidad</div>
-                  <div>Precio</div>
+                  <div>Precio (&lt;10)</div>
+                  <div>Precio (10+)</div>
                   <div>Color</div>
                   <div>Memoria</div>
                   <div>Tipo</div>
@@ -284,9 +288,12 @@ export default function ProductoVariacionesPage({ params }: { params: Promise<{ 
               {/* Filas de variantes */}
               {productVariants.map((variant: any) => (
                 <div key={variant.id} className="px-4 py-3 border-b border-gray-100 hover:bg-gray-50">
-                  <div className="grid grid-cols-7 gap-4 items-center text-sm">
+                  <div className="grid grid-cols-8 gap-4 items-center text-sm">
                     <div className="font-medium">{variant.stock}</div>
-                    <div className="font-medium text-green-600">€{variant.price}</div>
+                    <div className="font-medium text-blue-600">€{variant.price}</div>
+                    <div className="font-medium text-green-600">
+                      {variant.priceBulk ? `€${variant.priceBulk}` : '-'}
+                    </div>
                     <div className="flex items-center gap-2">
                       <div className={`w-3 h-3 rounded-full ${getColorSwatch(variant.color)}`}></div>
                       {variant.color}
@@ -344,12 +351,12 @@ export default function ProductoVariacionesPage({ params }: { params: Promise<{ 
           <CardContent>
             {/* Sistema de variantes - Siempre visible pero deshabilitado si no está completo */}
             <div className={`mb-6 p-4 border rounded-lg transition-all ${formData.storage && formData.color && formData.productType && formData.condition
-                ? 'bg-blue-50 border-blue-200'
-                : 'bg-gray-50 border-gray-200'
+              ? 'bg-blue-50 border-blue-200'
+              : 'bg-gray-50 border-gray-200'
               }`}>
               <h4 className={`text-sm font-medium mb-3 ${formData.storage && formData.color && formData.productType && formData.condition
-                  ? 'text-blue-900'
-                  : 'text-gray-500'
+                ? 'text-blue-900'
+                : 'text-gray-500'
                 }`}>
                 Agregar esta configuración
               </h4>
@@ -366,8 +373,8 @@ export default function ProductoVariacionesPage({ params }: { params: Promise<{ 
                     onChange={(e) => handleInputChange("stockQuantity", e.target.value)}
                     placeholder="0"
                     className={`w-full mt-2 ${!formData.storage || !formData.color || !formData.productType || !formData.condition
-                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                        : ''
+                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                      : ''
                       }`}
                     disabled={!formData.storage || !formData.color || !formData.productType || !formData.condition}
                     required
@@ -385,11 +392,29 @@ export default function ProductoVariacionesPage({ params }: { params: Promise<{ 
                     onChange={(e) => handleInputChange("variantPrice", e.target.value)}
                     placeholder="195.00"
                     className={`w-full mt-2 ${!formData.storage || !formData.color || !formData.productType || !formData.condition
-                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                        : ''
+                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                      : ''
                       }`}
                     disabled={!formData.storage || !formData.color || !formData.productType || !formData.condition}
                     required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="variantPriceBulk" className={!formData.storage || !formData.color || !formData.productType || !formData.condition ? 'text-gray-400' : ''}>
+                    Precio 10+ (€)
+                  </Label>
+                  <Input
+                    id="variantPriceBulk"
+                    type="number"
+                    step="0.01"
+                    value={formData.variantPriceBulk || ""}
+                    onChange={(e) => handleInputChange("variantPriceBulk", e.target.value)}
+                    placeholder="185.00"
+                    className={`w-full mt-2 ${!formData.storage || !formData.color || !formData.productType || !formData.condition
+                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                      : ''
+                      }`}
+                    disabled={!formData.storage || !formData.color || !formData.productType || !formData.condition}
                   />
                 </div>
                 <div className="flex items-end">
@@ -397,8 +422,8 @@ export default function ProductoVariacionesPage({ params }: { params: Promise<{ 
                     onClick={addProductVariant}
                     disabled={!formData.storage || !formData.color || !formData.productType || !formData.condition || !formData.stockQuantity || !formData.variantPrice}
                     className={`w-full ${!formData.storage || !formData.color || !formData.productType || !formData.condition
-                        ? 'opacity-50 cursor-not-allowed'
-                        : ''
+                      ? 'opacity-50 cursor-not-allowed'
+                      : ''
                       }`}
                   >
                     Agregar configuración
@@ -406,8 +431,8 @@ export default function ProductoVariacionesPage({ params }: { params: Promise<{ 
                 </div>
               </div>
               <p className={`text-xs ${formData.storage && formData.color && formData.productType && formData.condition
-                  ? 'text-blue-700'
-                  : 'text-gray-500'
+                ? 'text-blue-700'
+                : 'text-gray-500'
                 }`}>
                 {formData.storage && formData.color && formData.productType && formData.condition
                   ? `Configuración: ${formData.storage} | ${formData.color} | ${formData.productType} | ${formData.condition}`
@@ -416,7 +441,7 @@ export default function ProductoVariacionesPage({ params }: { params: Promise<{ 
               </p>
             </div>
             <div className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                 {/* Almacenamiento */}
                 <div className="space-y-3">
                   <div className="flex items-center gap-2 mb-3">
@@ -429,8 +454,8 @@ export default function ProductoVariacionesPage({ params }: { params: Promise<{ 
                         key={storage}
                         onClick={() => handleInputChange("storage", storage)}
                         className={`p-3 rounded-lg cursor-pointer transition-all border ${formData.storage === storage
-                            ? 'bg-brand-green/10 border-brand-green text-brand-green'
-                            : 'bg-gray-50 border-gray-200 hover:bg-gray-100 text-gray-700'
+                          ? 'bg-brand-green/10 border-brand-green text-brand-green'
+                          : 'bg-gray-50 border-gray-200 hover:bg-gray-100 text-gray-700'
                           }`}
                       >
                         <span className="text-sm font-medium">{storage}</span>
@@ -451,8 +476,8 @@ export default function ProductoVariacionesPage({ params }: { params: Promise<{ 
                         key={color}
                         onClick={() => handleInputChange("color", color)}
                         className={`p-3 rounded-lg cursor-pointer transition-all border flex items-center gap-3 ${formData.color === color
-                            ? 'bg-brand-green/10 border-brand-green text-brand-green'
-                            : 'bg-gray-50 border-gray-200 hover:bg-gray-100 text-gray-700'
+                          ? 'bg-brand-green/10 border-brand-green text-brand-green'
+                          : 'bg-gray-50 border-gray-200 hover:bg-gray-100 text-gray-700'
                           }`}
                       >
                         <div className={`w-4 h-4 rounded-full ${getColorSwatch(color)}`}></div>
@@ -482,8 +507,8 @@ export default function ProductoVariacionesPage({ params }: { params: Promise<{ 
                           }
                         }}
                         className={`p-3 rounded-lg cursor-pointer transition-all border items-center gap-3 ${formData.productType === productType
-                            ? 'bg-brand-green/10 border-brand-green text-brand-green'
-                            : 'bg-gray-50 border-gray-200 hover:bg-gray-100 text-gray-700'
+                          ? 'bg-brand-green/10 border-brand-green text-brand-green'
+                          : 'bg-gray-50 border-gray-200 hover:bg-gray-100 text-gray-700'
                           }`}
                       >
                         <span className="text-sm font-medium">
@@ -509,8 +534,8 @@ export default function ProductoVariacionesPage({ params }: { params: Promise<{ 
                         key={condition}
                         onClick={() => handleInputChange("condition", condition)}
                         className={`p-3 rounded-lg cursor-pointer transition-all border flex items-center gap-3 ${formData.condition === condition
-                            ? 'bg-brand-green/10 border-brand-green text-brand-green'
-                            : 'bg-gray-50 border-gray-200 hover:bg-gray-100 text-gray-700'
+                          ? 'bg-brand-green/10 border-brand-green text-brand-green'
+                          : 'bg-gray-50 border-gray-200 hover:bg-gray-100 text-gray-700'
                           }`}
                       >
                         <Badge

@@ -11,35 +11,36 @@ export const PRODUCT_COLORS = {
   'Púrpura': 'bg-purple-500',
   'Oro': 'bg-yellow-600',
   'Plata': 'bg-gray-400',
-  
+
   // Colores especiales
   'Grafito': 'bg-gray-700',
   'Medianoche': 'bg-gray-900',
   'Estelar': 'bg-gray-300',
-  
+
   // Colores Titanio
   'Titanio Natural': 'bg-stone-300',
   'Titanio Azul': 'bg-blue-300',
   'Titanio Blanco': 'bg-gray-100',
   'Titanio Negro': 'bg-gray-800',
-  
+
   // Colores Sierra
   'Verde Sierra': 'bg-green-600',
   'Azul Sierra': 'bg-blue-600',
   'Azul Pacífico': 'bg-blue-400',
+  'N/A': 'bg-transparent border border-dashed border-gray-300',
 } as const;
 
 // Lista de colores disponibles para productos nuevos
 export const NEW_PRODUCT_COLORS = [
-  "Negro", "Blanco", "Azul", "Rosa", "Amarillo", "Verde", "Rojo", "Púrpura", 
-  "Oro", "Plata", "Grafito", "Medianoche", "Estelar", "Titanio Natural", 
-  "Titanio Azul", "Titanio Blanco", "Titanio Negro", "Verde Sierra", 
+  "N/A", "Negro", "Blanco", "Azul", "Rosa", "Amarillo", "Verde", "Rojo", "Púrpura",
+  "Oro", "Plata", "Grafito", "Medianoche", "Estelar", "Titanio Natural",
+  "Titanio Azul", "Titanio Blanco", "Titanio Negro", "Verde Sierra",
   "Azul Sierra", "Azul Pacífico"
 ] as const;
 
 // Lista de colores disponibles para productos usados/reacondicionados
 export const USED_PRODUCT_COLORS = [
-  "Negro", "Blanco", "Azul", "Rosa", "Amarillo", "Verde", "Rojo", "Púrpura", 
+  "N/A", "Negro", "Blanco", "Azul", "Rosa", "Amarillo", "Verde", "Rojo", "Púrpura",
   "Oro", "Plata", "Grafito", "Medianoche", "Estelar"
 ] as const;
 

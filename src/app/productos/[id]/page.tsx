@@ -133,13 +133,8 @@ export default function ProductoPage() {
       if (selectedAccessories.screenProtector) totalPrice += 3.50;
       if (!selectedAccessories.caseWithCharger) totalPrice -= 9.90;
 
-      // Crear ID único basado en configuración
-      const accessoriesSuffix = [
-        selectedAccessories.screenProtector ? 'sp' : '',
-        selectedAccessories.caseWithCharger ? 'cc' : ''
-      ].filter(Boolean).join('-');
-
-      const uniqueId = accessoriesSuffix ? `${product.id}-${accessoriesSuffix}` : product.id;
+      // No modificamos el ID aquí, el carrito se encarga de generar el uniqueId
+      // basado en la configuración.
 
       // Crear nombre descriptivo
       let productName = product.name;
@@ -154,7 +149,6 @@ export default function ProductoPage() {
       // Producto configurado para el carrito (usar la variación seleccionada)
       const configuredProduct: Product = {
         ...product,
-        id: uniqueId,
         name: productName,
         price: totalPrice,
         // Usar valores de la variación seleccionada

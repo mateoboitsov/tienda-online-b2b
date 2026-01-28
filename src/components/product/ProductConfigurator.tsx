@@ -145,7 +145,7 @@ export function ProductConfigurator({ product, onConfigChange }: ProductConfigur
     <div className="space-y-4">
       <h3 className="text-lg font-semibold text-brand-black">Configurar producto</h3>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className={`grid grid-cols-1 md:grid-cols-${allOptions.colors.length === 1 && allOptions.colors[0] === 'N/A' ? '3' : '4'} gap-4`}>
         {/* Almacenamiento */}
         <div className="space-y-3">
           <div className="flex items-center gap-2 mb-3">
@@ -168,62 +168,65 @@ export function ProductConfigurator({ product, onConfigChange }: ProductConfigur
           </div>
         </div>
 
-        {/* Color */}
-        <div className="space-y-3">
-          <div className="flex items-center gap-2 mb-3">
-            <Palette className="w-4 h-4 text-gray-500" />
-            <span className="text-sm font-medium text-brand-black">Color</span>
-          </div>
-          <div className="space-y-2">
-            {allOptions.colors.map((color) => {
-              const isAvailable = availableOptions.colors.has(color);
-              const isSelected = selectedVariation.color === color;
-              return (
-                <div
-                  key={color}
-                  onClick={() => handleColorChange(color)}
-                  className={`p-3 rounded-lg transition-all border flex items-center gap-3 ${isSelected
-                    ? 'bg-brand-green/10 border-brand-green text-brand-green cursor-pointer'
-                    : isAvailable
-                      ? 'bg-gray-50 border-gray-200 hover:bg-gray-100 text-gray-700 cursor-pointer'
-                      : 'bg-gray-50/50 border-gray-200/50 text-gray-400 opacity-40 cursor-pointer hover:opacity-60'
-                    }`}
-                >
+        {/* Color - Solo mostrar si no es N/A único */}
+        {!(allOptions.colors.length === 1 && allOptions.colors[0] === 'N/A') && (
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 mb-3">
+              <Palette className="w-4 h-4 text-gray-500" />
+              <span className="text-sm font-medium text-brand-black">Color</span>
+            </div>
+            <div className="space-y-2">
+              {allOptions.colors.map((color) => {
+                const isAvailable = availableOptions.colors.has(color);
+                const isSelected = selectedVariation.color === color;
+                return (
                   <div
-                    className="w-4 h-4 rounded-full border border-gray-300 relative"
-                    style={{
-                      backgroundColor: getColorSwatch(color).replace('bg-', ''),
-                      // Mapeo directo de colores para asegurar que se apliquen
-                      ...(color === 'Negro' && { backgroundColor: '#000000' }),
-                      ...(color === 'Blanco' && { backgroundColor: '#ffffff', border: '1px solid #d1d5db' }),
-                      ...(color === 'Azul' && { backgroundColor: '#3b82f6' }),
-                      ...(color === 'Rosa' && { backgroundColor: '#f472b6' }),
-                      ...(color === 'Amarillo' && { backgroundColor: '#eab308' }),
-                      ...(color === 'Verde' && { backgroundColor: '#10b981' }),
-                      ...(color === 'Rojo' && { backgroundColor: '#ef4444' }),
-                      ...(color === 'Púrpura' && { backgroundColor: '#8b5cf6' }),
-                      ...(color === 'Oro' && { backgroundColor: '#d97706' }),
-                      ...(color === 'Plata' && { backgroundColor: '#9ca3af' }),
-                      ...(color === 'Natural' && { backgroundColor: '#d6d3d1' }),
-                      ...(color === 'Grafito' && { backgroundColor: '#4b5563' }),
-                      ...(color === 'Medianoche' && { backgroundColor: '#1f2937' }),
-                      ...(color === 'Estelar' && { backgroundColor: '#d1d5db' }),
-                      ...(color === 'Titanio Natural' && { backgroundColor: '#d6d3d1' }),
-                      ...(color === 'Titanio Azul' && { backgroundColor: '#93c5fd' }),
-                      ...(color === 'Titanio Blanco' && { backgroundColor: '#f3f4f6' }),
-                      ...(color === 'Titanio Negro' && { backgroundColor: '#374151' }),
-                      ...(color === 'Verde Sierra' && { backgroundColor: '#059669' }),
-                      ...(color === 'Azul Sierra' && { backgroundColor: '#2563eb' }),
-                      ...(color === 'Azul Pacífico' && { backgroundColor: '#60a5fa' }),
-                    }}
+                    key={color}
+                    onClick={() => handleColorChange(color)}
+                    className={`p-3 rounded-lg transition-all border flex items-center gap-3 ${isSelected
+                      ? 'bg-brand-green/10 border-brand-green text-brand-green cursor-pointer'
+                      : isAvailable
+                        ? 'bg-gray-50 border-gray-200 hover:bg-gray-100 text-gray-700 cursor-pointer'
+                        : 'bg-gray-50/50 border-gray-200/50 text-gray-400 opacity-40 cursor-pointer hover:opacity-60'
+                      }`}
                   >
+                    <div
+                      className="w-4 h-4 rounded-full border border-gray-300 relative"
+                      style={{
+                        backgroundColor: getColorSwatch(color).replace('bg-', ''),
+                        // Mapeo directo de colores para asegurar que se apliquen
+                        ...(color === 'Negro' && { backgroundColor: '#000000' }),
+                        ...(color === 'Blanco' && { backgroundColor: '#ffffff', border: '1px solid #d1d5db' }),
+                        ...(color === 'Azul' && { backgroundColor: '#3b82f6' }),
+                        ...(color === 'Rosa' && { backgroundColor: '#f472b6' }),
+                        ...(color === 'Amarillo' && { backgroundColor: '#eab308' }),
+                        ...(color === 'Verde' && { backgroundColor: '#10b981' }),
+                        ...(color === 'Rojo' && { backgroundColor: '#ef4444' }),
+                        ...(color === 'Púrpura' && { backgroundColor: '#8b5cf6' }),
+                        ...(color === 'Oro' && { backgroundColor: '#d97706' }),
+                        ...(color === 'Plata' && { backgroundColor: '#9ca3af' }),
+                        ...(color === 'Natural' && { backgroundColor: '#d6d3d1' }),
+                        ...(color === 'Grafito' && { backgroundColor: '#4b5563' }),
+                        ...(color === 'Medianoche' && { backgroundColor: '#1f2937' }),
+                        ...(color === 'Estelar' && { backgroundColor: '#d1d5db' }),
+                        ...(color === 'Titanio Natural' && { backgroundColor: '#d6d3d1' }),
+                        ...(color === 'Titanio Azul' && { backgroundColor: '#93c5fd' }),
+                        ...(color === 'Titanio Blanco' && { backgroundColor: '#f3f4f6' }),
+                        ...(color === 'Titanio Negro' && { backgroundColor: '#374151' }),
+                        ...(color === 'Verde Sierra' && { backgroundColor: '#059669' }),
+                        ...(color === 'Azul Sierra' && { backgroundColor: '#2563eb' }),
+                        ...(color === 'Azul Pacífico' && { backgroundColor: '#60a5fa' }),
+                        ...(color === 'N/A' && { background: 'repeating-linear-gradient(45deg, #f3f4f6, #f3f4f6 2px, #d1d5db 2px, #d1d5db 4px)' }),
+                      }}
+                    >
+                    </div>
+                    <span className="text-sm font-medium">{color}</span>
                   </div>
-                  <span className="text-sm font-medium">{color}</span>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Tipo de Producto - Solo mostrar si hay tipos disponibles */}
         {allOptions.productTypes.length > 0 && (

@@ -68,6 +68,7 @@ export default function ProductosPage() {
     productType: "NUEVO",
     condition: "NUEVO",
     price: "",
+    priceBulk: "",
     stock: "",
     // Accesorios
     screenProtector: false,
@@ -149,6 +150,7 @@ export default function ProductosPage() {
         condition: formData.condition as 'NUEVO' | 'A+' | 'A' | 'B',
         productType: formData.productType as 'NUEVO' | 'CPO' | 'ASIS' | 'REACONDICIONADO' | 'USADO',
         price: price,
+        priceBulk: formData.priceBulk ? parseFloat(formData.priceBulk) : null,
         stock: stock
       });
 
@@ -168,6 +170,7 @@ export default function ProductosPage() {
         productType: "NUEVO",
         condition: "NUEVO",
         price: "",
+        priceBulk: "",
         stock: "",
         screenProtector: false,
         caseWithCharger: true
@@ -364,6 +367,20 @@ export default function ProductosPage() {
                     </div>
 
                     <div className="space-y-1.5">
+                      <Label htmlFor="priceBulk" className="text-sm font-semibold text-green-800">Precio 10+ (€)</Label>
+                      <Input
+                        id="priceBulk"
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={formData.priceBulk}
+                        onChange={(e) => handleInputChange("priceBulk", e.target.value)}
+                        placeholder="0.00"
+                        className="bg-white border-green-200"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
                       <Label htmlFor="stock" className="text-sm font-semibold text-green-800">Stock *</Label>
                       <Input
                         id="stock"
@@ -403,6 +420,7 @@ export default function ProductosPage() {
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent className="max-h-[200px]">
+                          <SelectItem value="N/A">N/A</SelectItem>
                           <SelectItem value="Negro">Negro</SelectItem>
                           <SelectItem value="Blanco">Blanco</SelectItem>
                           <SelectItem value="Azul">Azul</SelectItem>

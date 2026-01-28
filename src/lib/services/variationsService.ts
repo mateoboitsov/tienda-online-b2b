@@ -12,6 +12,7 @@ function mapToProductVariation(dbVariation: any): ProductVariation {
     condition: dbVariation.condition as 'NUEVO' | 'A+' | 'A' | 'B',
     productType: dbVariation.product_type as 'NUEVO' | 'CPO' | 'ASIS' | 'REACONDICIONADO' | 'USADO',
     price: Number(dbVariation.price),
+    priceBulk: dbVariation.price_bulk ? Number(dbVariation.price_bulk) : null,
     stock: dbVariation.stock_quantity,
   };
 }
@@ -64,6 +65,7 @@ export async function createVariation(
       condition: variationData.condition ?? 'A+',
       product_type: variationData.productType ?? 'CPO',
       price: variationData.price ?? 0,
+      price_bulk: variationData.priceBulk ?? null,
       stock_quantity: variationData.stock ?? 0,
     })
     .select()
@@ -90,6 +92,7 @@ export async function updateVariation(
   if (updates.condition !== undefined) updateData.condition = updates.condition;
   if (updates.productType !== undefined) updateData.product_type = updates.productType;
   if (updates.price !== undefined) updateData.price = updates.price;
+  if (updates.priceBulk !== undefined) updateData.price_bulk = updates.priceBulk;
   if (updates.stock !== undefined) updateData.stock_quantity = updates.stock;
 
   const { data, error } = await supabase
