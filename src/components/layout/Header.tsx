@@ -12,11 +12,11 @@ import { ProfileDropdown } from "@/components/auth/ProfileDropdown";
 // Array de navegación - fácil de editar
 const navigationItems = [
   { name: "Inicio", href: "/" },
-  { name: "Quiénes somos", href: "/sobre-nosotros" },
+  { name: "Nosotros", href: "/sobre-nosotros" },
+  { name: "Productos", href: "/productos" },
   { name: "Cómo trabajamos", href: "/#como-trabajamos" },
   { name: "Preguntas frecuentes", href: "/#preguntas-frecuentes" },
   { name: "Contacto", href: "/#contacto" },
-  { name: "Tienda B2B", href: "/productos" }
 ];
 
 // Array de idiomas - fácil de editar
@@ -96,13 +96,10 @@ export function Header() {
                 onClick={(e) => {
                   const isAnchor = item.href.includes('#');
                   const isSamePage = pathname === '/' || pathname === '';
-
                   if (isAnchor && isSamePage) {
                     e.preventDefault();
                     const hash = item.href.substring(item.href.indexOf('#'));
                     handleSmoothScroll(hash);
-                  } else if (item.href === "/productos") {
-                    handleTiendaB2BClick(e, item.href);
                   }
                 }}
               >
@@ -216,13 +213,10 @@ export function Header() {
                       onClick={(e) => {
                         const isAnchor = item.href.includes('#');
                         const isSamePage = pathname === '/' || pathname === '';
-
                         if (isAnchor && isSamePage) {
                           e.preventDefault();
                           const hash = item.href.substring(item.href.indexOf('#'));
                           handleSmoothScroll(hash);
-                        } else if (item.href === "/productos") {
-                          handleTiendaB2BClick(e, item.href);
                         }
                         setIsMobileMenuOpen(false);
                       }}

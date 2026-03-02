@@ -77,6 +77,16 @@ const config: Config = {
           from: { height: "var(--radix-accordion-content-height)" },
           to: { height: "0" },
         },
+        "bounce-slow": {
+          "0%, 100%": {
+            transform: "translateY(-5%)",
+            animationTimingFunction: "cubic-bezier(0.8, 0, 1, 1)",
+          },
+          "50%": {
+            transform: "translateY(0)",
+            animationTimingFunction: "cubic-bezier(0, 0, 0.2, 1)",
+          },
+        },
         "fade-in-up": {
           "0%": {
             opacity: "0",
@@ -125,6 +135,7 @@ const config: Config = {
         "fade-in-scale": "fade-in-scale 0.8s ease-in-out",
         "fade-in-left": "fade-in-left 0.8s ease-in-out",
         "fade-in-right": "fade-in-right 0.8s ease-in-out",
+        "bounce-slow": "bounce-slow 3s infinite",
       },
     },
   },

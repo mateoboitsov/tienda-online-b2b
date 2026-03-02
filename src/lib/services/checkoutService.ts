@@ -28,13 +28,13 @@ export interface CheckoutItem {
 // Calcular costo de envío
 function calculateShippingCost(country: string, speed: string): number {
   const isSpainOrPortugal = country === 'España' || country === 'Portugal';
-  
+
   if (isSpainOrPortugal) {
     if (speed === 'express' || speed === 'urgent') return 9.99;
     if (speed === 'saturday') return 12.00;
     return 5.99; // standard
   }
-  
+
   return 0; // Para otros países, precio a consultar
 }
 
@@ -92,22 +92,26 @@ export async function processCheckout(checkoutData: CheckoutData): Promise<{ ord
     });
   }
 
-  // 5. Actualizar stock de variaciones
+  // 5. Actualizar stock de variaciones (via API route para evitar restricciones de RLS)
+  // No se bloquea el pedido si falla el update de stock
+  const stockUpdates: { variation_id: string; quantity: number }[] = [];
   for (const item of checkoutData.items) {
     if (item.variation_id) {
-      const variation = await getVariationById(item.variation_id);
-      await updateVariation(item.variation_id, {
-        stock: variation.stock - item.quantity
-      });
+      stockUpdates.push({ variation_id: item.variation_id, quantity: item.quantity });
     } else {
-      // Si no hay variation_id, actualizar primera variación del producto
       const product = await getProduct(item.product_id);
-      if (product && product.variations[0]) {
-        await updateVariation(product.variations[0].id, {
-          stock: product.variations[0].stock - item.quantity
-        });
+      if (product?.variations[0]) {
+        stockUpdates.push({ variation_id: product.variations[0].id, quantity: item.quantity });
       }
     }
+  }
+
+  if (stockUpdates.length > 0) {
+    fetch('/api/orders/update-stock', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ updates: stockUpdates }),
+    }).catch(err => console.warn('Stock update failed (non-blocking):', err));
   }
 
   return { orderId: order.id, orderNumber: order.order_number };

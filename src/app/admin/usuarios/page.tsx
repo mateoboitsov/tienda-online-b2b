@@ -41,6 +41,13 @@ export default function AdminUsuariosPage() {
     try {
       const user = await updateUser(userId, { approved: true });
       if (user) {
+        // Enviar notificación por email
+        fetch('/api/notify/approval', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: user.name, email: user.email }),
+        }).catch(console.error);
+
         setMessage({ type: 'success', text: 'Usuario aprobado correctamente' });
         await loadUsers(); // Recargar la lista
       } else {

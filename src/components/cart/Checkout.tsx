@@ -91,7 +91,7 @@ export function Checkout({ selectedProducts, products, onBack, onComplete }: Che
     email: "",
     taxId: ""
   });
-  const [paymentMethod, setPaymentMethod] = useState<"transfer" | "card" | "budget">("transfer");
+  const [paymentMethod, setPaymentMethod] = useState<"transfer" | "budget">("transfer");
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
@@ -415,49 +415,41 @@ export function Checkout({ selectedProducts, products, onBack, onComplete }: Che
     }
 
     try {
-      const checkoutItems = cartState.items.map(item => {
-        // item.id es el id real del producto (UUID)
-        // Sanitizar el ID en caso de que venga de una sesión antigua con sufijos (-cc, -sp)
-        // Los UUID tienen 5 partes separadas por 4 guiones.
+      const mappedItems = cartState.items.map(item => {
         const productIdParts = item.id.split('-');
         const baseProductId = productIdParts.length > 5
           ? productIdParts.slice(0, 5).join('-')
           : item.id;
 
-        // Buscar el producto en la lista de productos de la base de datos
         const product = allProducts.find(p => p.id === baseProductId) || allProducts.find(p => p.id === item.id);
 
         if (!product) {
           throw new Error(`Producto ${baseProductId} no encontrado en el sistema`);
         }
 
-        // Buscar la variación correspondiente usando los datos del item del carrito
-        const variationId = findVariationId(
-          product,
-          item.storage,
-          item.color,
-          item.condition
-        );
+        const variationId = findVariationId(product, item.storage, item.color, item.condition);
 
         return {
           product_id: product.id,
           variation_id: variationId,
           quantity: item.quantity,
           price: item.price || 0,
+          storage: item.storage || '',
+          color: item.color || '',
+          condition: item.condition || '',
         };
       });
 
-      if (checkoutItems.length === 0) {
+      if (mappedItems.length === 0) {
         throw new Error("El carrito está vacío");
       }
 
-      // Preparar datos del checkout
       const shippingAddress = shippingType === "business" ? businessInfo : customerInfo;
       const finalCountry = shippingAddress.country === "Otro" ? otherCountry : shippingAddress.country;
 
-      const checkoutData: CheckoutData = {
+      const checkoutPayload = {
         user_id: user.id,
-        items: checkoutItems,
+        items: mappedItems,
         shipping_address: {
           address: shippingAddress.address,
           city: shippingAddress.city,
@@ -466,13 +458,58 @@ export function Checkout({ selectedProducts, products, onBack, onComplete }: Che
           phone: shippingAddress.phone,
         },
         shipping_type: shippingType,
-        shipping_speed: shippingSpeed as 'standard' | 'express',
+        shipping_speed: shippingSpeed,
         payment_method: paymentMethod,
         notes: paymentMethod === "budget" ? "Solicitud de presupuesto para pedido mayorista" : undefined,
       };
 
-      // Procesar checkout con el servicio
-      const result = await processCheckout(checkoutData);
+      // Procesar checkout via API de servidor (evita problemas de RLS del cliente)
+      const checkoutRes = await fetch('/api/orders/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(checkoutPayload),
+      });
+
+      const result = await checkoutRes.json();
+
+      if (!checkoutRes.ok || !result.ok) {
+        throw new Error(result.error || 'Error al procesar el pedido');
+      }
+
+      // Notificar al admin y al cliente del nuevo pedido (sin bloquear el flujo)
+      fetch('/api/notify/order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          orderNumber: result.orderNumber,
+          userName: user.name || user.email || '',
+          userEmail: user.email || '',
+          company: userProfile?.company || businessInfo.companyName || '',
+          totalAmount: getTotalPrice(),
+          shippingCost: checkoutPayload.shipping_address.country === 'España' || checkoutPayload.shipping_address.country === 'Portugal'
+            ? (shippingSpeed === 'express' || shippingSpeed === 'urgent' ? 9.99 : 5.99)
+            : 0,
+          shippingCountry: finalCountry,
+          shippingSpeed,
+          paymentMethod,
+          shippingAddress: {
+            address: shippingAddress.address,
+            city: shippingAddress.city,
+            postal_code: shippingAddress.postalCode,
+            country: finalCountry,
+            phone: shippingAddress.phone,
+          },
+          items: cartState.items.map(item => ({
+            name: item.name,
+            quantity: item.quantity,
+            price: item.price || 0,
+            storage: item.storage,
+            color: item.color,
+            condition: item.condition,
+          })),
+        }),
+      }).catch(console.error);
+
 
       // Preparar datos de envío para la confirmación
       // IMPORTANTE: Guardar los datos del pedido ANTES de limpiar el carrito
@@ -1155,8 +1192,8 @@ export function Checkout({ selectedProducts, products, onBack, onComplete }: Che
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-4">
-                        <Tabs value={paymentMethod} onValueChange={(value: string) => setPaymentMethod(value as "transfer" | "card" | "budget")} className="w-full">
-                          <TabsList className="grid w-full grid-cols-3 h-14 bg-brand-gray/30 border border-brand-black/10 rounded-xl p-1">
+                        <Tabs value={paymentMethod} onValueChange={(value: string) => setPaymentMethod(value as "transfer" | "budget")} className="w-full">
+                          <TabsList className="grid w-full grid-cols-2 h-14 bg-brand-gray/30 border border-brand-black/10 rounded-xl p-1">
                             <TabsTrigger
                               value="transfer"
                               disabled={isBudgetRequired}
@@ -1166,15 +1203,7 @@ export function Checkout({ selectedProducts, products, onBack, onComplete }: Che
                               <Shield className="w-5 h-5" />
                               <span className="font-medium">Transferencia</span>
                             </TabsTrigger>
-                            <TabsTrigger
-                              value="card"
-                              disabled={isBudgetRequired}
-                              className={`flex items-center space-x-3 rounded-lg transition-all duration-200 data-[state=active]:bg-muted data-[state=active]:text-brand-black data-[state=active]:scale-[1.02] data-[state=active]:border-2 data-[state=active]:border-brand-gray data-[state=inactive]:text-brand-black/70 data-[state=active]:hover:text-brand-black data-[state=inactive]:hover:bg-brand-white/50 cursor-pointer ${isBudgetRequired ? 'opacity-50 cursor-not-allowed' : ''
-                                }`}
-                            >
-                              <CreditCard className="w-5 h-5" />
-                              <span className="font-medium">Tarjeta</span>
-                            </TabsTrigger>
+
                             <TabsTrigger
                               value="budget"
                               disabled={!isBudgetRequired}
@@ -1201,17 +1230,7 @@ export function Checkout({ selectedProducts, products, onBack, onComplete }: Che
                           </div>
                         )}
 
-                        {paymentMethod === "card" && (
-                          <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                            <div className="flex items-center space-x-2 text-blue-700">
-                              <CreditCard className="w-4 h-4" />
-                              <span className="font-medium">Tarjeta de crédito/débito</span>
-                            </div>
-                            <p className="text-sm text-blue-600 mt-2">
-                              Procesaremos tu pago de forma segura con tarjeta de crédito o débito.
-                            </p>
-                          </div>
-                        )}
+
 
                         {paymentMethod === "budget" && (
                           <div className="p-4 bg-orange-50 border border-orange-200 rounded-lg">

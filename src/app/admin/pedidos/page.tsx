@@ -67,6 +67,26 @@ export default function AdminPedidosPage() {
       const updated = await updateOrderStatus(orderId, newStatus);
       if (updated) {
         setMessage({ type: 'success', text: 'Estado del pedido actualizado correctamente' });
+
+        // Buscar datos del cliente para enviar notificación
+        const order = orders.find(o => o.id === orderId);
+        if (order) {
+          const orderUser = users.find(u => u.id === order.user_id);
+          if (orderUser) {
+            fetch('/api/notify/order-status', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                name: orderUser.name,
+                email: orderUser.email,
+                orderNumber: order.order_number,
+                newStatus,
+                totalAmount: order.total_amount,
+              }),
+            }).catch(console.error);
+          }
+        }
+
         await loadData();
       } else {
         setMessage({ type: 'error', text: 'Error al actualizar el estado del pedido' });
