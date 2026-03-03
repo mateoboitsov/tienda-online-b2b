@@ -1,6 +1,6 @@
 import nodemailer from 'nodemailer';
 
-const NOTIFY_EMAILS = ['boitsov01@gmail.com'];
+const NOTIFY_EMAILS = ['boitsov01@gmail.com', 'info@versaltechb2b.com'];
 const NOTIFY_EMAIL_STRING = NOTIFY_EMAILS.join(', ');
 const CUSTOMER_FROM = '"Versaltech B2B" <info@versaltechb2b.com>';
 
