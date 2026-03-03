@@ -10,7 +10,7 @@ export function AboutUs() {
     <section className="bg-white min-h-[550px] h-[80vh] flex items-center justify-center pt-20">
       <div className="container mx-auto px-4 text-center">
         <div className="max-w-3xl mx-auto">
-          <h1 
+          <h1
             ref={titleRef}
             className="text-brand-black"
             style={titleAnimation}
@@ -20,16 +20,16 @@ export function AboutUs() {
               <div className="text-highlight-content">somos tu partner tecnológico</div>
             </div>
           </h1>
-          <p 
+          <p
             ref={descriptionRef}
             className="text-base opacity-60 text-brand-black/70 max-w-[500px] mx-auto"
             style={descriptionAnimation}
           >
-            Somos una empresa especializada en la venta mayorista de dispositivos tecnológicos, con sede en Portugal. 
-            Nuestra misión es proporcionar a nuestros clientes productos de alta calidad a precios competitivos, 
-            respaldados por un servicio excepcional y una atención personalizada en múltiples idiomas.
-          </p>              
-        </div>        
+            Somos una empresa especializada en la venta mayorista de dispositivos tecnológicos, con sede en Portugal.
+            Nuestra misión es proporcionar a nuestros clientes productos de alta calidad a precios competitivos,
+            respaldados por un servicio excepcional y una atención personalizada.
+          </p>
+        </div>
       </div>
     </section>
   );

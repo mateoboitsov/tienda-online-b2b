@@ -38,7 +38,7 @@ const features = [
   {
     image: "/atencion-personalizada.png",
     title: "Atención Personalizada",
-    description: "Hablamos tu idioma: Español, Alemán, Inglés y Portugués.",
+    description: "Hablamos tu idioma: Español e Inglés.",
     badge: "Experiencia",
     color: "bg-orange-100 text-orange-800"
   }

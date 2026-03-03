@@ -32,7 +32,6 @@ export function Hero() {
   // Usar hooks de animación basados en viewport
   const { elementRef: titleRef, animationStyle: titleAnimation } = useViewportAnimation<HTMLHeadingElement>('fadeInUp', 0.3);
   const { elementRef: subtitleRef, animationStyle: subtitleAnimation } = useViewportAnimation<HTMLParagraphElement>('fadeInUp', 0.5);
-  const { elementRef: brandsRef, animationStyle: brandsAnimation } = useViewportAnimation<HTMLDivElement>('fadeInUp', 0.7);
   const { elementRef: backgroundRef, animationStyle: backgroundAnimation } = useViewportAnimation<HTMLDivElement>('fadeInScale', 0.1);
   const { containerRef: categoriesRef, getItemAnimationStyle: getCategoryAnimation } = useViewportStaggeredAnimation('fadeInScale', 5, 0.1);
 
@@ -86,7 +85,7 @@ export function Hero() {
             <span className="block sm:inline">Tu proveedor mayorista de confianza de</span>{" "}
             <span className="block sm:inline">dispositivos</span>{" "}
             <div className="text-highlight inline-block" style={{ transform: 'translateY(-2px) rotate(-1deg)' }}>
-              <div className="text-highlight-content">nuevos, usados y reacondicionados</div>
+              <div className="text-highlight-content">nuevos y usados</div>
             </div>
           </h1>
           <p
@@ -94,52 +93,12 @@ export function Hero() {
             className="text-sm sm:text-base opacity-60 text-brand-black/70 mb-6 sm:mb-8 max-w-[400px] sm:max-w-[500px] mx-auto px-4 sm:px-0 leading-relaxed"
             style={subtitleAnimation}
           >
-            Somos una empresa con sede en Portugal, especializada en la venta mayorista de dispositivos Apple, Samsung, Xiaomi y más.
+            Somos una empresa con sede en Portugal, especializada en la venta mayorista de dispositivos Apple y Samsung.
           </p>
         </div>
       </div>
 
-      {/* Slider infinito de marcas */}
-      <div
-        ref={brandsRef}
-        className="w-full overflow-hidden bg-white/50 backdrop-blur-sm py-4 sm:py-8"
-        style={brandsAnimation}
-      >
-        <div className="flex animate-scroll space-x-8 sm:space-x-16 whitespace-nowrap">
-          <span className="text-sm sm:text-base font-semibold text-brand-gray/60 opacity-60">Apple</span>
-          <span className="text-sm sm:text-base font-semibold text-brand-gray/60 opacity-60">Samsung</span>
-          <span className="text-sm sm:text-base font-semibold text-brand-gray/60 opacity-60">Xiaomi</span>
-          <span className="text-sm sm:text-base font-semibold text-brand-gray/60 opacity-60">Oppo</span>
-          <span className="text-sm sm:text-base font-semibold text-brand-gray/60 opacity-60">Google</span>
-          <span className="text-sm sm:text-base font-semibold text-brand-gray/60 opacity-60">Poco</span>
-          <span className="text-sm sm:text-base font-semibold text-brand-gray/60 opacity-60">Realme</span>
-          <span className="text-sm sm:text-base font-semibold text-brand-gray/60 opacity-60">ZTE</span>
-          <span className="text-sm sm:text-base font-semibold text-brand-gray/60 opacity-60">Apple</span>
-          <span className="text-sm sm:text-base font-semibold text-brand-gray/60 opacity-60">Samsung</span>
-          <span className="text-sm sm:text-base font-semibold text-brand-gray/60 opacity-60">Xiaomi</span>
-          <span className="text-sm sm:text-base font-semibold text-brand-gray/60 opacity-60">Oppo</span>
-          <span className="text-sm sm:text-base font-semibold text-brand-gray/60 opacity-60">Google</span>
-          <span className="text-sm sm:text-base font-semibold text-brand-gray/60 opacity-60">Poco</span>
-          <span className="text-sm sm:text-base font-semibold text-brand-gray/60 opacity-60">Realme</span>
-          <span className="text-sm sm:text-base font-semibold text-brand-gray/60 opacity-60">ZTE</span>
-          <span className="text-sm sm:text-base font-semibold text-brand-gray/60 opacity-60">Apple</span>
-          <span className="text-sm sm:text-base font-semibold text-brand-gray/60 opacity-60">Samsung</span>
-          <span className="text-sm sm:text-base font-semibold text-brand-gray/60 opacity-60">Xiaomi</span>
-          <span className="text-sm sm:text-base font-semibold text-brand-gray/60 opacity-60">Oppo</span>
-          <span className="text-sm sm:text-base font-semibold text-brand-gray/60 opacity-60">Google</span>
-          <span className="text-sm sm:text-base font-semibold text-brand-gray/60 opacity-60">Poco</span>
-          <span className="text-sm sm:text-base font-semibold text-brand-gray/60 opacity-60">Realme</span>
-          <span className="text-sm sm:text-base font-semibold text-brand-gray/60 opacity-60">ZTE</span>
-          <span className="text-sm sm:text-base font-semibold text-brand-gray/60 opacity-60">Apple</span>
-          <span className="text-sm sm:text-base font-semibold text-brand-gray/60 opacity-60">Samsung</span>
-          <span className="text-sm sm:text-base font-semibold text-brand-gray/60 opacity-60">Xiaomi</span>
-          <span className="text-sm sm:text-base font-semibold text-brand-gray/60 opacity-60">Oppo</span>
-          <span className="text-sm sm:text-base font-semibold text-brand-gray/60 opacity-60">Google</span>
-          <span className="text-sm sm:text-base font-semibold text-brand-gray/60 opacity-60">Poco</span>
-          <span className="text-sm sm:text-base font-semibold text-brand-gray/60 opacity-60">Realme</span>
-          <span className="text-sm sm:text-base font-semibold text-brand-gray/60 opacity-60">ZTE</span>
-        </div>
-      </div>
+
 
       {/* Contenedor de categorías */}
       <div ref={categoriesRef} className="w-full px-6 sm:px-10 mx-auto">

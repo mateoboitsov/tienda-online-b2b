@@ -684,7 +684,7 @@ export default function ProductoPage() {
                       Atención Personalizada
                     </h4>
                     <p className="text-sm font-medium text-gray-600 max-w-[250px]">
-                      Hablamos tu idioma: Español, Alemán, Inglés y Portugués.
+                      Hablamos tu idioma: Español e Inglés.
                     </p>
                   </div>
                 </div>
