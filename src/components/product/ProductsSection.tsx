@@ -5,7 +5,7 @@ import { ProductCard } from "./ProductCard";
 import { ProductCardList } from "./ProductCardList";
 import { ProductFilters } from "./ProductFilters";
 import { Product } from "@/lib/types/database";
-import { getProducts } from "@/lib/services/productsService";
+import { getMedusaProducts as getProducts } from "@/lib/services/medusaProductsService";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/contexts/CartContext";
 import { ShoppingCart, MessageCircle, Smartphone, Truck, Shield, Package, Users, HeadphonesIcon, Banknote, LayoutGrid, List } from "lucide-react";

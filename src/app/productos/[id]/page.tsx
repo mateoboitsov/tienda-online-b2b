@@ -25,7 +25,7 @@ import {
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Product } from "@/lib/types/database";
-import { getProduct } from "@/lib/services/productsService";
+import { getMedusaProduct as getProduct } from "@/lib/services/medusaProductsService";
 
 export default function ProductoPage() {
   const params = useParams();

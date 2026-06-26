@@ -57,9 +57,11 @@ function mapMedusaVariant(
   const estado = getOptionValue(variant, 'estado', options) || getOptionValue(variant, 'condition', options);
 
   const stock = stockData.get(variant.id);
-  // Price comes from Medusa calculated_price (B2B price list applied automatically)
-  const priceInCents = variant.calculated_price?.calculated_amount ?? null;
-  const price = priceInCents != null ? priceInCents / 100 : 0;
+  // Price comes from Medusa calculated_price. With versaltech pointed at the
+  // dedicated B2B region, this resolves to the wholesale price. Medusa v2
+  // amounts are already in the main currency unit (euros), not cents.
+  const amount = variant.calculated_price?.calculated_amount ?? null;
+  const price = amount != null ? amount : 0;
 
   return {
     id: stock?.id ?? variant.id,
