@@ -4,7 +4,7 @@ import { createClient } from '../supabase/client';
 
 
 // Mapear de DatabaseProductVariation a ProductVariation
-function mapToProductVariation(dbVariation: any): ProductVariation {
+function mapToProductVariation(dbVariation: any): ProductVariation & { medusa_variant_id?: string; medusa_product_id?: string } {
   return {
     id: dbVariation.id,
     storage: dbVariation.storage,
@@ -15,12 +15,25 @@ function mapToProductVariation(dbVariation: any): ProductVariation {
     priceBulk: dbVariation.price_bulk ? Number(dbVariation.price_bulk) : null,
     stock: dbVariation.stock_quantity,
     packaging: dbVariation.packaging as 'Original Box' | 'Standard' | null,
+    medusa_variant_id: dbVariation.medusa_variant_id ?? undefined,
+    medusa_product_id: dbVariation.medusa_product_id ?? undefined,
   };
 }
 
 // Obtener todas las variaciones de un producto
+// Supports both Supabase product UUID and Medusa product ID (prod_...)
 export async function getProductVariations(productId: string): Promise<ProductVariation[]> {
   const supabase = createClient();
+
+  if (productId.startsWith('prod_')) {
+    const { data, error } = await supabase
+      .from('product_variations')
+      .select('*')
+      .eq('medusa_product_id', productId);
+    if (error) { console.error('Error getting product variations:', error); throw error; }
+    return (data || []).map(mapToProductVariation);
+  }
+
   const { data, error } = await supabase
     .from('product_variations')
     .select('*')
@@ -34,42 +47,66 @@ export async function getProductVariations(productId: string): Promise<ProductVa
   return (data || []).map(mapToProductVariation);
 }
 
-// Obtener una variación por ID
+// Obtener una variación por ID (UUID de Supabase o medusa_variant_id)
 export async function getVariationById(id: string): Promise<ProductVariation> {
   const supabase = createClient();
+
+  // Try by primary key first
   const { data, error } = await supabase
     .from('product_variations')
     .select('*')
     .eq('id', id)
-    .single();
+    .maybeSingle();
 
-  if (error) {
-    console.error('Error getting variation:', error);
-    throw new Error('Variación no encontrada');
+  if (data) return mapToProductVariation(data);
+
+  // Fallback: look up by medusa_variant_id (when id is a Medusa variant ID)
+  const { data: byMedusa, error: medusaError } = await supabase
+    .from('product_variations')
+    .select('*')
+    .eq('medusa_variant_id', id)
+    .maybeSingle();
+
+  if (byMedusa) return mapToProductVariation(byMedusa);
+
+  if (error || medusaError) {
+    console.error('Error getting variation:', error || medusaError);
   }
 
-  return mapToProductVariation(data);
+  throw new Error('Variación no encontrada');
 }
 
 // Crear nueva variación
 export async function createVariation(
   productId: string,
-  variationData: Partial<ProductVariation>
+  variationData: Partial<ProductVariation> & { medusa_variant_id?: string; medusa_product_id?: string }
 ): Promise<ProductVariation> {
   const supabase = createClient();
+
+  const isMedusaProduct = productId.startsWith('prod_');
+  const insertData: Record<string, unknown> = {
+    storage: variationData.storage ?? '128GB',
+    color: variationData.color ?? 'Negro',
+    condition: variationData.condition ?? 'A+',
+    product_type: variationData.productType ?? 'CPO',
+    price: variationData.price ?? 0,
+    price_bulk: variationData.priceBulk ?? null,
+    stock_quantity: variationData.stock ?? 0,
+    packaging: variationData.packaging ?? null,
+  };
+
+  if (isMedusaProduct) {
+    insertData.medusa_product_id = productId;
+    if (variationData.medusa_variant_id) insertData.medusa_variant_id = variationData.medusa_variant_id;
+  } else {
+    insertData.product_id = productId;
+    if (variationData.medusa_variant_id) insertData.medusa_variant_id = variationData.medusa_variant_id;
+    if (variationData.medusa_product_id) insertData.medusa_product_id = variationData.medusa_product_id;
+  }
+
   const { data, error } = await supabase
     .from('product_variations')
-    .insert({
-      product_id: productId,
-      storage: variationData.storage ?? '128GB',
-      color: variationData.color ?? 'Negro',
-      condition: variationData.condition ?? 'A+',
-      product_type: variationData.productType ?? 'CPO',
-      price: variationData.price ?? 0,
-      price_bulk: variationData.priceBulk ?? null,
-      stock_quantity: variationData.stock ?? 0,
-      packaging: variationData.packaging ?? null,
-    })
+    .insert(insertData)
     .select()
     .single();
 

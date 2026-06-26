@@ -1,61 +1,21 @@
 import { DatabaseProduct } from '../types/database';
 import { createClient } from '../supabase/client';
-import { Product, ProductVariation } from '../types/database';
+import { Product } from '../types/database';
 import { getProductVariations } from './variationsService';
+import { getMedusaProducts, getMedusaProduct } from './medusaProductsService';
 
-// Función helper para transformar DatabaseProduct + variaciones a Product
-async function mapToProduct(dbProduct: any, variations: ProductVariation[]): Promise<Product> {
-  return {
-    id: dbProduct.id,
-    name: dbProduct.name,
-    description: dbProduct.description || '',
-    image: dbProduct.images?.[0] || '',
-    images: dbProduct.images || [],
-    category: dbProduct.category,
-    brand: dbProduct.brand,
-    model: dbProduct.model,
-    region: dbProduct.region,
-    variations: variations,
-    accessories: dbProduct.accessories as { screenProtector: boolean; caseWithCharger: boolean } | undefined,
-  };
-}
-
-// Obtener todos los productos con sus variaciones
+// Obtener todos los productos con sus variaciones (desde Medusa)
 export async function getProducts(): Promise<Product[]> {
-  const supabase = createClient();
-  const { data: productsData, error } = await supabase
-    .from('products')
-    .select('*')
-    .eq('active', true)  // Solo mostrar productos activos
-    .order('created_at', { ascending: false });
-
-  if (error) {
-    console.error('Error getting products:', error);
-    throw error;
-  }
-
-  if (!productsData || productsData.length === 0) {
-    return [];
-  }
-
-  // Obtener variaciones para cada producto
-  const productsWithVariations = await Promise.all(
-    (productsData || []).map(async (product: any) => {
-      const variations = await getProductVariations(product.id);
-      return mapToProduct(product, variations);
-    })
-  );
-
-  return productsWithVariations;
+  return getMedusaProducts();
 }
 
-// Obtener TODOS los productos (activos e inactivos) - Solo para admin
+// Obtener TODOS los productos (activos e inactivos) - Solo para admin (Supabase)
 export async function getAllProductsForAdmin(): Promise<(Product & { active: boolean })[]> {
   const supabase = createClient();
   const { data: productsData, error } = await supabase
     .from('products')
     .select('*')
-    .order('active', { ascending: false })  // Activos primero
+    .order('active', { ascending: false })
     .order('created_at', { ascending: false });
 
   if (error) {
@@ -67,23 +27,37 @@ export async function getAllProductsForAdmin(): Promise<(Product & { active: boo
     return [];
   }
 
-  // Obtener variaciones para cada producto
   const productsWithVariations = await Promise.all(
     (productsData || []).map(async (product: any) => {
       const variations = await getProductVariations(product.id);
-      const mappedProduct = await mapToProduct(product, variations);
-      return {
-        ...mappedProduct,
-        active: product.active ?? true,  // Incluir el estado active
+      const mappedProduct: Product = {
+        id: product.id,
+        name: product.name,
+        description: product.description || '',
+        image: product.images?.[0] || '',
+        images: product.images || [],
+        category: product.category,
+        brand: product.brand,
+        model: product.model,
+        region: product.region,
+        variations,
+        accessories: product.accessories,
       };
+      return { ...mappedProduct, active: product.active ?? true };
     })
   );
 
   return productsWithVariations;
 }
 
-// Obtener un producto por ID con sus variaciones
+// Obtener un producto por ID (desde Medusa si es ID de Medusa, sino Supabase)
 export async function getProduct(id: string): Promise<Product | null> {
+  // Medusa product IDs start with "prod_"
+  if (id.startsWith('prod_')) {
+    return getMedusaProduct(id);
+  }
+
+  // Fallback: Supabase (legacy)
   const supabase = createClient();
   const { data: productData, error } = await supabase
     .from('products')
@@ -92,16 +66,25 @@ export async function getProduct(id: string): Promise<Product | null> {
     .single();
 
   if (error) {
-    if (error.code === 'PGRST116') {
-      return null; // No encontrado
-    }
+    if (error.code === 'PGRST116') return null;
     console.error('Error getting product:', error);
     throw error;
   }
 
-  // Obtener variaciones del producto
   const variations = await getProductVariations(id);
-  return mapToProduct(productData, variations);
+  return {
+    id: productData.id,
+    name: productData.name,
+    description: productData.description || '',
+    image: productData.images?.[0] || '',
+    images: productData.images || [],
+    category: productData.category,
+    brand: productData.brand,
+    model: productData.model,
+    region: productData.region,
+    variations,
+    accessories: productData.accessories,
+  };
 }
 
 // Crear producto base (sin variaciones - las variaciones se crean por separado)

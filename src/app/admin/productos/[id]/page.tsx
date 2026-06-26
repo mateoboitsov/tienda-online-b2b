@@ -3,15 +3,16 @@
 import { useState, useEffect, use, useMemo } from "react";
 import { getProductVariations, createVariation, updateVariation, deleteVariation } from "@/lib/services/variationsService";
 import { getProduct } from "@/lib/services/productsService";
+import { medusaFetch } from "@/lib/medusa/client";
+import { MedusaProduct } from "@/lib/medusa/types";
 import { getColorSwatch } from "@/lib/config/colorConstants";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, HardDrive, Palette, Star, Shield } from "lucide-react";
+import { ArrowLeft, HardDrive, Palette, Star, Shield, Link2 } from "lucide-react";
 import Link from "next/link";
 
 // Estructura de familias de productos actualizada a Enero 2026
@@ -50,6 +51,7 @@ const productFamilies = {
 
 export default function ProductoVariacionesPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
+  const isMedusaProduct = id.startsWith('prod_');
   const [producto, setProducto] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [deletingVariants, setDeletingVariants] = useState<Set<string>>(new Set());
@@ -62,9 +64,11 @@ export default function ProductoVariacionesPage({ params }: { params: Promise<{ 
     productType: "CPO",
     stockQuantity: "",
     variantPrice: "",
-    variantPriceBulk: ""
+    variantPriceBulk: "",
+    medusaVariantId: "",
   });
   const [productVariants, setProductVariants] = useState<any[]>([]);
+  const [medusaVariants, setMedusaVariants] = useState<{ id: string; title: string; options: { value: string }[] }[]>([]);
 
   // Extraer colores únicos de todas las variaciones existentes + colores comunes
   const availableColors = useMemo(() => {
@@ -75,12 +79,11 @@ export default function ProductoVariacionesPage({ params }: { params: Promise<{ 
     return Array.from(colorsFromVariations).sort();
   }, [productVariants]);
 
-  // Cargar producto desde Supabase y variaciones del servicio
+  // Cargar producto y variaciones
   useEffect(() => {
     const loadProductAndVariations = async () => {
       try {
         setLoading(true);
-        // Obtener producto desde Supabase
         const productData = await getProduct(id);
         const variationsData = await getProductVariations(id);
 
@@ -95,6 +98,21 @@ export default function ProductoVariacionesPage({ params }: { params: Promise<{ 
           });
         }
         setProductVariants(variationsData);
+
+        // Si es producto de Medusa, cargar sus variantes para el selector
+        if (isMedusaProduct) {
+          const { products } = await medusaFetch<{ products: MedusaProduct[] }>(
+            `/store/products?id=${id}`
+          );
+          if (products[0]) {
+            const variants = products[0].variants.map(v => ({
+              id: v.id,
+              title: v.title,
+              options: v.options,
+            }));
+            setMedusaVariants(variants);
+          }
+        }
       } catch (error) {
         console.error('Error cargando producto:', error);
       } finally {
@@ -103,7 +121,7 @@ export default function ProductoVariacionesPage({ params }: { params: Promise<{ 
     };
 
     loadProductAndVariations();
-  }, [id]);
+  }, [id, isMedusaProduct]);
 
   if (loading) {
     return (
@@ -136,6 +154,29 @@ export default function ProductoVariacionesPage({ params }: { params: Promise<{ 
     }));
   };
 
+  // When a Medusa variant is selected, auto-fill storage/color from its title
+  const handleMedusaVariantSelect = (variantId: string) => {
+    handleInputChange("medusaVariantId", variantId);
+    const v = medusaVariants.find(mv => mv.id === variantId);
+    if (!v) return;
+    // title format: "Color - Capacidad - Estado"
+    const parts = v.title.split(' - ');
+    if (parts.length >= 2) {
+      const color = parts[0].trim();
+      const storage = parts[1].trim().replace(' ', ''); // "128 GB" -> "128GB"
+      const estado = parts[2]?.trim().toLowerCase();
+      handleInputChange("color", color);
+      handleInputChange("storage", storage);
+      if (estado === 'nuevo') {
+        handleInputChange("condition", "NUEVO");
+        handleInputChange("productType", "NUEVO");
+      } else {
+        handleInputChange("condition", "A+");
+        handleInputChange("productType", "CPO");
+      }
+    }
+  };
+
   const addProductVariant = async () => {
     if (!formData.storage || !formData.color || !formData.productType || !formData.condition || !formData.stockQuantity || !formData.variantPrice) {
       alert("Por favor, completa todas las opciones, especifica las existencias y el precio");
@@ -150,12 +191,13 @@ export default function ProductoVariacionesPage({ params }: { params: Promise<{ 
         productType: formData.productType as 'NUEVO' | 'CPO' | 'ASIS' | 'REACONDICIONADO' | 'USADO',
         price: parseFloat(formData.variantPrice),
         priceBulk: formData.variantPriceBulk ? parseFloat(formData.variantPriceBulk) : null,
-        stock: parseInt(formData.stockQuantity)
+        stock: parseInt(formData.stockQuantity),
+        medusa_variant_id: formData.medusaVariantId || undefined,
+        medusa_product_id: isMedusaProduct ? id : undefined,
       });
 
       setProductVariants((prev: any[]) => [...prev, newVariant]);
 
-      // Limpiar formulario
       setFormData((prev: any) => ({
         ...prev,
         storage: "",
@@ -164,7 +206,8 @@ export default function ProductoVariacionesPage({ params }: { params: Promise<{ 
         productType: "CPO",
         stockQuantity: "",
         variantPrice: "",
-        variantPriceBulk: ""
+        variantPriceBulk: "",
+        medusaVariantId: "",
       }));
 
       alert("Variación creada exitosamente");
@@ -320,7 +363,7 @@ export default function ProductoVariacionesPage({ params }: { params: Promise<{ 
             <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
               {/* Header de la tabla */}
               <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
-                <div className="grid grid-cols-8 gap-4 text-sm font-medium text-gray-700">
+                <div className="grid grid-cols-9 gap-4 text-sm font-medium text-gray-700">
                   <div>Cantidad</div>
                   <div>Precio (&lt;10)</div>
                   <div>Precio (10+)</div>
@@ -328,6 +371,7 @@ export default function ProductoVariacionesPage({ params }: { params: Promise<{ 
                   <div>Memoria</div>
                   <div>Tipo</div>
                   <div>Estado</div>
+                  <div>Medusa</div>
                   <div>Acciones</div>
                 </div>
               </div>
@@ -337,7 +381,7 @@ export default function ProductoVariacionesPage({ params }: { params: Promise<{ 
                 <div key={variant.id} className={`px-4 py-3 border-b border-gray-100 ${editingVariantId === variant.id ? 'bg-blue-50' : 'hover:bg-gray-50'}`}>
                   {editingVariantId === variant.id ? (
                     /* Modo Edición */
-                    <div className="grid grid-cols-8 gap-4 items-center text-sm">
+                    <div className="grid grid-cols-9 gap-4 items-center text-sm">
                       <Input
                         type="number"
                         value={editFormData.stock}
@@ -420,10 +464,11 @@ export default function ProductoVariacionesPage({ params }: { params: Promise<{ 
                           ✕
                         </Button>
                       </div>
+                      <div />
                     </div>
                   ) : (
                     /* Modo Vista */
-                    <div className="grid grid-cols-8 gap-4 items-center text-sm">
+                    <div className="grid grid-cols-9 gap-4 items-center text-sm">
                       <div className="font-medium">{variant.stock}</div>
                       <div className="font-medium text-blue-600">
                         {variant.price === 0 || !variant.price ? 'N/A' : `€${variant.price}`}
@@ -456,6 +501,15 @@ export default function ProductoVariacionesPage({ params }: { params: Promise<{ 
                           {variant.condition}
                         </Badge>
                       </div>
+                      <div>
+                        {variant.medusa_variant_id ? (
+                          <Badge variant="outline" className="text-xs bg-purple-50 border-purple-300 text-purple-700">
+                            <Link2 className="w-3 h-3 mr-1" />Vinculado
+                          </Badge>
+                        ) : (
+                          <span className="text-xs text-gray-400">—</span>
+                        )}
+                      </div>
                       <div className="flex gap-1">
                         <Button
                           variant="ghost"
@@ -482,13 +536,36 @@ export default function ProductoVariacionesPage({ params }: { params: Promise<{ 
             </div>
           </CardContent>
         </Card>
-        {/* Configurar producto - Estilo igual que ProductConfigurator */}
+        {/* Configurar producto */}
         <Card>
           <CardHeader>
             <CardTitle>Configurar producto</CardTitle>
           </CardHeader>
           <CardContent>
-            {/* Sistema de variantes - Siempre visible pero deshabilitado si no está completo */}
+            {/* Selector de variante Medusa (solo para productos Medusa) */}
+            {isMedusaProduct && medusaVariants.length > 0 && (
+              <div className="mb-6 p-4 bg-purple-50 border border-purple-200 rounded-lg">
+                <div className="flex items-center gap-2 mb-3">
+                  <Link2 className="w-4 h-4 text-purple-600" />
+                  <h4 className="text-sm font-medium text-purple-900">Vincular variante de Medusa</h4>
+                </div>
+                <p className="text-xs text-purple-700 mb-3">Selecciona la variante del catálogo compartido — se rellenará automáticamente.</p>
+                <Select value={formData.medusaVariantId} onValueChange={handleMedusaVariantSelect}>
+                  <SelectTrigger className="bg-white">
+                    <SelectValue placeholder="Seleccionar variante de Medusa..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {medusaVariants
+                      .filter(mv => !productVariants.some((pv: any) => pv.medusa_variant_id === mv.id))
+                      .map(mv => (
+                        <SelectItem key={mv.id} value={mv.id}>{mv.title}</SelectItem>
+                      ))
+                    }
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
             <div className={`mb-6 p-4 border rounded-lg transition-all ${formData.storage && formData.color && formData.productType && formData.condition
               ? 'bg-blue-50 border-blue-200'
               : 'bg-gray-50 border-gray-200'
